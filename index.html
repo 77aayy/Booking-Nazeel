@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="نظام إدارة متكامل - منظومة التسعير، تنسيق بوكينج، المقارنة، الصندوق، المواسم، والإيجار">
+    <meta name="theme-color" content="#022A3A">
+    <title>إدارة النظام</title>
+    
+    <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Modern Font for Developer Signature -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase - Load first (blocking) -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    
+    <!-- External Libraries - Defer for non-blocking -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+</head>
+<body>
+    <!-- Mobile Menu Toggle Button -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="قائمة">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>⚙️ الإدارة</h1>
+            <p>نظام الإدارة</p>
+            <div class="developer-signature">تم التنفيذ بواسطة أيمن أبو ورده | 77aayy@gmail.com</div>
+        </div>
+        <div class="tab-list" id="tab-list">
+            <!-- Tabs will be loaded dynamically -->
+        </div>
+        <div class="sidebar-footer">
+            <!-- Logout button removed for direct access -->
+        </div>
+    </div>
+
+    <!-- Overlay for mobile menu -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Global Loader -->
+    <div id="global-loader" class="hidden">
+        <div class="spinner">⏳</div>
+        <div id="global-loader-text">جاري الاتصال بالسيرفر...</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Content will be loaded dynamically -->
+    </div>
+
+    <!-- Print Area (Hidden) -->
+    <div id="printArea"></div>
+
+    <!-- Security Utilities - Load first (before other scripts) -->
+    <script src="js/security.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/errorHandler.js"></script>
+    
+    <!-- Tab Manager - Load first -->
+    <script src="js/TabManager.js"></script>
+    
+    <!-- Pages (Each page is independent) - Defer for lazy loading -->
+    <script src="pages/MonthlyYearlyPage.js" defer></script>
+    <script src="pages/MatchingPage.js" defer></script>
+    <script src="pages/PricingPage.js" defer></script>
+    <script src="pages/SeasonsPage.js" defer></script>
+    <script src="pages/CashBoxPage.js" defer></script>
+    <script src="pages/BookingNazeelComparePage.js" defer></script>
+    
+    <!-- Initialize - Load after all scripts -->
+    <script src="js/app.js" defer></script>
+</body>
+</html>

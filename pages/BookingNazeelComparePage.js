@@ -1,0 +1,1498 @@
+/**
+ * BookingNazeelComparePage.js
+ * صفحة المقارنة
+ */
+
+class BookingNazeelComparePage {
+    async render() {
+        return `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<title>منظومة Adora لمطابقة الحجوزات (القناص)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+    /* V18.0 Priority Fix Style - Scoped to page wrapper only */
+    .booking-nazeel-page-wrapper {
+        --bn-primary: #2CB1E1; --bn-primary-soft: rgba(44, 177, 225, 0.1); --bn-accent: #FFD700;        
+        --bn-bg-body: #022A3A; --bn-text-dark: #FFFFFF; --bn-text-light: rgba(255, 255, 255, 0.6);
+        --bn-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.2);
+        --bn-radius: 16px;
+        --bn-grad-blue: linear-gradient(135deg, #2CB1E1, #166882);
+        --bn-grad-ok: linear-gradient(135deg, #10b981, #059669);
+        --bn-grad-warn: linear-gradient(135deg, #f59e0b, #d97706);
+        --bn-grad-err: linear-gradient(135deg, #ef4444, #dc2626);
+        --bn-grad-purple: linear-gradient(135deg, #8e2de2, #4a00e0);
+    }
+    /* Scoped styles - لا تؤثر على القائمة الجانبية - تصميم داكن موحد */
+    .booking-nazeel-page-wrapper * { box-sizing: border-box; outline: none; }
+    .booking-nazeel-page-wrapper { 
+        margin: 0; padding: 0 0 60px 0; font-family: 'Tajawal', sans-serif; 
+        color: var(--bn-text-dark); background-color: var(--bn-bg-body);
+        background-image: linear-gradient(135deg, #022A3A 0%, #001219 100%);
+        min-height: 100vh;
+    }
+    .booking-nazeel-page-wrapper .app-header {
+        background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+        border: 1px solid rgba(100, 200, 255, 0.15);
+        padding: 15px 25px; border-radius: 16px; margin: 20px 20px 0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .booking-nazeel-page-wrapper .brand { display: flex; align-items: center; gap: 12px; }
+    .booking-nazeel-page-wrapper .logo-img { height: 40px; width: auto; } 
+    .booking-nazeel-page-wrapper .brand-info h1 { margin: 0; font-size: 1.3rem; font-weight: 800; color: #2CB1E1; }
+    .booking-nazeel-page-wrapper .brand-info p { margin: 0; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
+    .booking-nazeel-page-wrapper .header-tools { display: flex; gap: 10px; }
+    .booking-nazeel-page-wrapper .btn-chic {
+        background: rgba(2, 42, 58, 0.9); border: 2px solid rgba(100, 200, 255, 0.2); padding: 10px 18px;
+        border-radius: 12px; cursor: pointer; transition: all 0.3s;
+        display: flex; align-items: center; gap: 8px;
+        font-weight: 700; color: #FFFFFF; font-size: 0.85rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .booking-nazeel-page-wrapper .btn-chic:hover { 
+        border-color: #2CB1E1; 
+        background: rgba(2, 42, 58, 1);
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 12px rgba(44, 177, 225, 0.3);
+    }
+    .booking-nazeel-page-wrapper .hero-card { margin: 30px auto; max-width: 800px; padding: 0 20px; animation: slideIn 0.5s ease-out; }
+    .booking-nazeel-page-wrapper .upload-box {
+        background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(100, 200, 255, 0.15); border-radius: var(--bn-radius); padding: 30px;
+        box-shadow: var(--bn-shadow-card); text-align: center; position: relative;
+    }
+    .booking-nazeel-page-wrapper .upload-box::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, #2CB1E1, #FFD700);
+        border-radius: 16px 16px 0 0;
+    }
+    .booking-nazeel-page-wrapper .drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+    .booking-nazeel-page-wrapper .drop-zone {
+        border: 2px dashed rgba(100, 200, 255, 0.3); border-radius: 15px; padding: 25px;
+        transition: 0.3s; cursor: pointer; background: rgba(2, 42, 58, 0.4);
+    }
+    .booking-nazeel-page-wrapper .drop-zone:hover { border-color: #2CB1E1; background: rgba(2, 42, 58, 0.6); }
+    .booking-nazeel-page-wrapper .drop-zone.file-loaded { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+    .booking-nazeel-page-wrapper .drop-zone i { font-size: 2rem; color: #2CB1E1; }
+    .booking-nazeel-page-wrapper .drop-zone h3 { margin: 10px 0 0; font-size: 0.9rem; color: #FFFFFF; font-weight: 700; }
+    .booking-nazeel-page-wrapper .drop-zone input { display: none; }
+    .booking-nazeel-page-wrapper .upload-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0%;
+        height: 4px;
+        background: linear-gradient(90deg, #2CB1E1, #10b981);
+        border-radius: 0 0 12px 12px;
+        transition: width 0.1s linear;
+        box-shadow: 0 0 10px rgba(44, 177, 225, 0.5);
+    }
+    .booking-nazeel-page-wrapper .drop-zone {
+        position: relative;
+        overflow: hidden;
+    }
+    .booking-nazeel-page-wrapper .btn-magic {
+        background: linear-gradient(135deg, #2CB1E1, #166882); color: #fff; border: none;
+        padding: 14px 40px; border-radius: 50px; font-size: 1rem; font-weight: 800;
+        cursor: pointer; box-shadow: 0 8px 20px rgba(44, 177, 225, 0.3); transition: 0.3s;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .booking-nazeel-page-wrapper .btn-magic:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(44, 177, 225, 0.4); }
+    .booking-nazeel-page-wrapper .control-panel { display: none; justify-content: center; gap: 15px; margin: 0 auto 20px; }
+    .booking-nazeel-page-wrapper .tax-settings {
+        display: flex; gap: 15px; background: rgba(2, 42, 58, 0.7); padding: 8px 18px; 
+        border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(100, 200, 255, 0.2);
+    }
+    .booking-nazeel-page-wrapper .tax-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #2CB1E1; }
+    .booking-nazeel-page-wrapper .tax-inp { width: 45px; text-align: center; border: 2px solid rgba(100, 200, 255, 0.2); border-radius: 10px; padding: 4px; background: rgba(2, 42, 58, 0.9); color: #FFD700; font-weight: 800; }
+    .booking-nazeel-page-wrapper .dashboard {
+        display: none; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px; padding: 0 25px; max-width: 1250px; margin: 0 auto 20px;
+        animation: fadeIn 0.6s ease;
+    }
+    .booking-nazeel-page-wrapper .kpi-card {
+        background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(100, 200, 255, 0.15); border-radius: 12px; padding: 12px 10px;
+        box-shadow: var(--bn-shadow-card); text-align: center; position: relative;
+        transition: 0.3s;
+    }
+    .booking-nazeel-page-wrapper .kpi-card:hover { transform: translateY(-3px); border-color: rgba(44, 177, 225, 0.3); }
+    .booking-nazeel-page-wrapper .kpi-icon {
+        width: 32px; height: 32px; border-radius: 10px; margin: 0 auto 5px;
+        display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem;
+    }
+    .booking-nazeel-page-wrapper .k-blue .kpi-icon { background: var(--bn-grad-blue); }
+    .booking-nazeel-page-wrapper .k-green .kpi-icon { background: var(--bn-grad-ok); }
+    .booking-nazeel-page-wrapper .k-red .kpi-icon { background: var(--bn-grad-err); }
+    .booking-nazeel-page-wrapper .k-gold .kpi-icon { background: var(--bn-grad-warn); }
+    .booking-nazeel-page-wrapper .k-purple .kpi-icon { background: var(--bn-grad-purple); }
+    .booking-nazeel-page-wrapper .kpi-num { font-size: 1.1rem; font-weight: 800; color: #FFFFFF; display: block; margin-bottom: 2px; }
+    .booking-nazeel-page-wrapper .kpi-lbl { font-size: 0.65rem; color: rgba(255, 255, 255, 0.6); font-weight: 700; }
+    .booking-nazeel-page-wrapper .sub-stats {
+        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px;
+        margin-top: 8px; padding-top: 5px; border-top: 1px dashed #eee;
+    }
+    .booking-nazeel-page-wrapper .mini { background: #f8f9fa; border-radius: 6px; padding: 3px; display: flex; flex-direction: column; align-items: center; }
+    .booking-nazeel-page-wrapper .mini b { font-size: 0.75rem; } .booking-nazeel-page-wrapper .mini span { font-size: 0.55rem; color: #90a4ae; font-weight: 600; }
+    .booking-nazeel-page-wrapper .booking-logo { height: 14px; vertical-align: middle; opacity: 0.9; }
+    .booking-nazeel-page-wrapper .results-wrap { display: none; padding: 0 25px; max-width: 1250px; margin: 0 auto; }
+    .booking-nazeel-page-wrapper .filter-pills { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+    .booking-nazeel-page-wrapper .pill {
+        white-space: nowrap; padding: 8px 18px; border-radius: 20px; background: rgba(2, 42, 58, 0.7); border: 2px solid rgba(100, 200, 255, 0.2);
+        font-weight: 700; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); cursor: pointer; transition: 0.2s;
+    }
+    .booking-nazeel-page-wrapper .pill.active { background: rgba(2, 42, 58, 0.95); color: #2CB1E1; border-color: #2CB1E1; box-shadow: 0 0 0 2px rgba(44, 177, 225, 0.2); }
+    .booking-nazeel-page-wrapper .pill.red.active { background: rgba(220, 38, 38, 0.3); border-color: #dc2626; color: #dc2626; }
+    .booking-nazeel-page-wrapper .search-box {
+        width: 100%; padding: 12px 20px; border-radius: 12px; border: 2px solid rgba(100, 200, 255, 0.2);
+        background: rgba(2, 42, 58, 0.9); color: #FFFFFF; font-size: 0.9rem; margin-bottom: 20px;
+        font-weight: 600;
+    }
+    .booking-nazeel-page-wrapper .search-box:focus {
+        border-color: #2CB1E1;
+        background: rgba(2, 42, 58, 1);
+        box-shadow: 0 0 0 3px rgba(44, 177, 225, 0.25);
+        outline: none;
+    }
+    .booking-nazeel-page-wrapper .table-responsive { background: transparent; overflow-x: auto; }
+    .booking-nazeel-page-wrapper table { width: 100%; border-collapse: separate; border-spacing: 0 10px; min-width: 900px; }
+    .booking-nazeel-page-wrapper thead th {
+        background: rgba(44, 177, 225, 0.1); color: #2CB1E1; padding: 10px 15px;
+        text-align: right; font-weight: 800; font-size: 0.75rem; border: 1px solid rgba(100, 200, 255, 0.15);
+        cursor: pointer; user-select: none;
+    }
+    .booking-nazeel-page-wrapper tbody tr { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(100, 200, 255, 0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; }
+    .booking-nazeel-page-wrapper tbody tr:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(44, 177, 225, 0.2); border-color: rgba(44, 177, 225, 0.3); }
+    .booking-nazeel-page-wrapper tbody td {
+        padding: 12px 15px; border-top: 1px solid rgba(100, 200, 255, 0.1); border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+        font-size: 0.85rem; vertical-align: middle; color: rgba(255, 255, 255, 0.9);
+    }
+    .booking-nazeel-page-wrapper tbody td:first-child { border-left: 1px solid rgba(100, 200, 255, 0.1); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+    .booking-nazeel-page-wrapper tbody td:last-child { border-right: 1px solid rgba(100, 200, 255, 0.1); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+    .booking-nazeel-page-wrapper .st-ok { background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; }
+    .booking-nazeel-page-wrapper .st-no { background: #ffebee; color: #c62828; padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; }
+    .booking-nazeel-page-wrapper .match-tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 5px; font-weight: 700; white-space: nowrap; }
+    .booking-nazeel-page-wrapper .mt-ok { background: var(--bn-primary-soft); color: var(--bn-primary); }
+    .booking-nazeel-page-wrapper .mt-warn { background: #fff8e1; color: #f57f17; }
+    .booking-nazeel-page-wrapper .mt-err { background: #ffebee; color: #c62828; }
+    .booking-nazeel-page-wrapper .mt-grp { background: #f3e5f5; color: #8e24aa; }
+    .booking-nazeel-page-wrapper .mt-guess { background: #e0f2f1; color: #00695c; border:1px solid #b2dfdb; }
+    .booking-nazeel-page-wrapper .mt-miss { background: #eceff1; color: #78909c; }
+    .booking-nazeel-page-wrapper .mt-alias { background: #e3f2fd; color: #1565c0; border:1px solid #90caf9; }
+    .booking-nazeel-page-wrapper .mt-ext { background: #fffde7; color: #fbc02d; border:1px solid #ffee58; }
+    .booking-nazeel-page-wrapper .b-name { font-weight: 800; color: #2CB1E1; font-size: 0.85rem; }
+    .booking-nazeel-page-wrapper .b-ref { font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); }
+    .booking-nazeel-page-wrapper .price-val { font-weight: 700; font-size: 0.85rem; color: #FFFFFF; }
+    .booking-nazeel-page-wrapper .diff-pos { color: #27ae60; font-weight: 800; } .booking-nazeel-page-wrapper .diff-neg { color: #c0392b; font-weight: 800; }
+    .booking-nazeel-page-wrapper .d-box { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .booking-nazeel-page-wrapper .d-line { display: flex; align-items: center; gap: 8px; }
+    .booking-nazeel-page-wrapper .d-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .booking-nazeel-page-wrapper .dot-b { background: #2980b9; } .booking-nazeel-page-wrapper .txt-b { color: #2980b9; }
+    .booking-nazeel-page-wrapper .dot-n { background: #27ae60; } .booking-nazeel-page-wrapper .txt-n { color: #27ae60; }
+    .booking-nazeel-page-wrapper .btn-mini { padding: 4px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; cursor: pointer; border: none; color: #fff; margin-top: 3px; }
+    .booking-nazeel-page-wrapper .bm-merge { background: #8e44ad; }
+    .booking-nazeel-page-wrapper .diff-diag { font-size: 0.7rem; color: #90a4ae; font-weight: 600; }
+    .booking-nazeel-page-wrapper .loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(2, 42, 58, 0.98); z-index: 2000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+    @media print {
+        .booking-nazeel-page-wrapper { background: #fff; color: #000; font-size: 9pt; }
+        .booking-nazeel-page-wrapper .app-header, .booking-nazeel-page-wrapper .hero-card, .booking-nazeel-page-wrapper .filter-pills, .booking-nazeel-page-wrapper .search-box, .booking-nazeel-page-wrapper .control-panel, .booking-nazeel-page-wrapper .dashboard { display: none !important; }
+        .booking-nazeel-page-wrapper .results-wrap { display: block !important; padding: 0; margin: 20px; width: 98%; }
+        .booking-nazeel-page-wrapper .table-responsive { box-shadow: none; border: none; overflow: visible; }
+        .booking-nazeel-page-wrapper table { border-collapse: collapse; width: 100%; border: 1px solid #000; margin-top: 10px; }
+        .booking-nazeel-page-wrapper th { background: #d9d9d9 !important; color: #000 !important; border: 1px solid #000; padding: 4px 6px; font-size: 9pt; font-weight: bold; text-align: center; }
+        .booking-nazeel-page-wrapper td { border: 1px solid #000; padding: 3px 5px; color: #000 !important; font-size: 8pt; height: auto; vertical-align: middle; }
+        .booking-nazeel-page-wrapper tbody tr { box-shadow: none !important; background: transparent !important; margin: 0 !important; }
+        .booking-nazeel-page-wrapper tbody td:first-child, .booking-nazeel-page-wrapper tbody td:last-child { border-radius: 0; border: 1px solid #000; }
+        .booking-nazeel-page-wrapper table { border-spacing: 0; }
+        .booking-nazeel-page-wrapper .btn-mini, .booking-nazeel-page-wrapper .logo-img, .booking-nazeel-page-wrapper .d-dot, .booking-nazeel-page-wrapper .sub-stats, .booking-nazeel-page-wrapper .diff-diag { display: none !important; }
+        .booking-nazeel-page-wrapper .d-box { display: block; font-weight: normal; font-size: 8pt; }
+        .booking-nazeel-page-wrapper .d-line { display: block; margin-bottom: 2px; }
+        .booking-nazeel-page-wrapper .txt-b, .booking-nazeel-page-wrapper .txt-n { color: #000 !important; }
+        .booking-nazeel-page-wrapper .badge, .booking-nazeel-page-wrapper .status-badge, .booking-nazeel-page-wrapper .match-tag { border: none; background: transparent !important; color: #000 !important; padding: 0; font-weight: normal; }
+        .booking-nazeel-page-wrapper * { -webkit-print-color-adjust: exact; color: #000 !important; }
+        .booking-nazeel-page-wrapper .results-wrap::before { content: "تقرير مطابقة الحجوزات - Adora System (V18.0)"; display: block; text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 15px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="booking-nazeel-page-wrapper">
+<div class="loader" id="loader">
+    <i class="fas fa-gem fa-spin fa-3x" style="color:var(--bn-primary)"></i>
+    <h4 style="margin-top:15px;color:var(--bn-primary)">جاري التحليل (V18.0)...</h4>
+</div>
+
+<header class="app-header">
+    <div class="brand">
+        <img src="adora-logo.jpg" alt="Adora" class="logo-img" onerror="this.style.display='none'">
+        <div class="brand-info">
+            <h1>منظومة مقارنة بوكينج و نزيل</h1>
+            <p>القناص</p>
+        </div>
+    </div>
+    <div class="header-tools">
+        <button class="btn-chic" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+        <button class="btn-chic" onclick="exportExcel()"><i class="fas fa-file-excel"></i> اكسيل</button>
+    </div>
+</header>
+
+<div class="hero-card" id="uploadCard">
+    <div class="upload-box">
+        <div class="drop-grid">
+            <label class="drop-zone" id="dz-naz">
+                <i class="fas fa-file-invoice" style="color:var(--bn-accent)"></i>
+                <h3>نزيل (Guests)</h3>
+                <input accept=".xlsx,.xls,.csv" id="nazeelFile" type="file"/>
+                <div class="upload-progress" id="progress-naz"></div>
+            </label>
+            <label class="drop-zone" id="dz-book">
+                <i class="fas fa-passport" style="color:var(--bn-primary)"></i>
+                <h3>بوكينج (Booking)</h3>
+                <input accept=".xlsx,.xls,.csv" id="bookingFile" type="file"/>
+                <div class="upload-progress" id="progress-book"></div>
+            </label>
+        </div>
+        <button class="btn-magic" onclick="startEngine()">
+            <span>تحليل</span> <i class="fas fa-bolt"></i>
+        </button>
+    </div>
+</div>
+
+<div class="control-panel" id="controlPanel">
+    <div class="tax-settings">
+        <div class="tax-item">الضريبة <input type="number" id="taxVal" class="tax-inp" value="15"></div>
+        <div class="tax-item">البلدية <input type="number" id="muniVal" class="tax-inp" value="2.5"></div>
+    </div>
+</div>
+
+<div class="dashboard" id="dashboard">
+    <div class="kpi-card k-blue">
+        <div class="kpi-icon"><i class="fas fa-book"></i></div>
+        <span class="kpi-num" id="kpiBook">0</span>
+        <span class="kpi-lbl">إجمالي</span>
+        <div class="sub-stats">
+            <div class="mini"><b id="subOk" style="color:var(--bn-primary)">0</b><span>مؤكد</span></div>
+            <div class="mini"><b id="subCan" style="color:#c0392b">0</b><span>ملغي</span></div>
+            <div class="mini"><b id="subNos" style="color:#f39c12">0</b><span>NoShow</span></div>
+        </div>
+    </div>
+
+    <div class="kpi-card k-green">
+        <div class="kpi-icon"><i class="fas fa-check"></i></div>
+        <span class="kpi-num" id="kpiOk">0</span>
+        <span class="kpi-lbl">مطابق</span>
+    </div>
+    <div class="kpi-card k-purple">
+        <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+        <span class="kpi-num" id="kpiGroup">0</span>
+        <span class="kpi-lbl">تجميع/ت.يدوي</span>
+    </div>
+    <div class="kpi-card k-gold">
+        <div class="kpi-icon"><i class="fas fa-fingerprint"></i></div>
+        <span class="kpi-num" id="kpiMoney">0</span>
+        <span class="kpi-lbl">بصمة/تمديد</span>
+    </div>
+    
+    <div class="kpi-card">
+        <span class="kpi-num" id="kpiRevB" style="color:#003580; font-size:1.3rem">0</span>
+        <span class="kpi-lbl" style="font-size:0.65rem">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Booking.com_logo.svg" class="booking-logo"> إيراد
+        </span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-num" id="kpiRevN" style="color:var(--bn-primary); font-size:1.3rem">0</span>
+        <span class="kpi-lbl" style="font-size:0.65rem">إيراد نزيل</span>
+    </div>
+    <div class="kpi-card k-red">
+        <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <span class="kpi-num" id="kpiRecover">0</span>
+        <span class="kpi-lbl">تسكين (إلغاء)</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-num" id="kpiDiff" style="color:#78909c; font-size:1.3rem">0</span>
+        <span class="kpi-lbl" style="font-size:0.65rem">الفرق</span>
+    </div>
+</div>
+
+<div class="results-wrap" id="resultsArea">
+    <div class="filter-pills">
+        <div class="pill active" onclick="setFilter('all', this)">الكل</div>
+        <div class="pill red" onclick="setFilter('conflict', this)">⚠️ تعارض</div>
+        <div class="pill" onclick="setFilter('group', this)">🔗 تجميع/يدوي</div>
+        <div class="pill" onclick="setFilter('alias', this)">🧠 ذاكرة</div>
+        <div class="pill" onclick="setFilter('guess,extension,money', this)">💰 بصمة/تمديد</div>
+        <div class="pill" onclick="setFilter('miss', this)">❌ مفقود</div>
+        <div class="pill" onclick="setStatusFilter('confirmed', this)">✅ مؤكد</div>
+        <div class="pill" onclick="setStatusFilter('cancelled', this)">❌ ملغي</div>
+    </div>
+
+    <input type="text" class="search-box" id="searchInput" placeholder="بحث..." aria-label="بحث في الجدول">
+
+    <div class="table-responsive">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th width="3%" onclick="sortTable(0)"># <i class="fas fa-sort"></i></th>
+                    <th width="20%" onclick="sortTable(1)">الاسم (B) <i class="fas fa-sort"></i></th>
+                    <th width="10%" onclick="sortTable(2)">الحالة <i class="fas fa-sort"></i></th>
+                    <th width="20%" onclick="sortTable(3)">الاسم (N) <i class="fas fa-sort"></i></th>
+                    <th width="12%" onclick="sortTable(4)">طريقة الربط <i class="fas fa-sort"></i></th>
+                    <th width="10%" onclick="sortTable(5)">بوكينج <i class="fas fa-sort"></i></th>
+                    <th width="10%" onclick="sortTable(6)">نزيل <i class="fas fa-sort"></i></th>
+                    <th width="8%" onclick="sortTable(7)">الفرق <i class="fas fa-sort"></i></th>
+                    <th width="15%" onclick="sortTable(8)">التواريخ <i class="fas fa-sort"></i></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+
+<script>
+// --- IndexedDB Functions (V18.0) ---
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('AdoraMatchDB', 1);
+
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains('aliases')) {
+                db.createObjectStore('aliases', { keyPath: 'bName' });
+            }
+        };
+
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            resolve(db);
+        };
+
+        request.onerror = (e) => {
+            // IndexedDB error - reject silently
+            reject(e.target.error);
+        };
+    });
+}
+
+function saveAlias(bName, nName) {
+    if(!db) return;
+    const transaction = db.transaction(['aliases'], 'readwrite');
+    const store = transaction.objectStore('aliases');
+    store.put({ bName: normalize(bName), nName: normalize(nName) });
+}
+
+function getAlias(bName) {
+    return new Promise((resolve, reject) => {
+        if(!db) { resolve(null); return; }
+        const transaction = db.transaction(['aliases'], 'readonly');
+        const store = transaction.objectStore('aliases');
+        const request = store.get(normalize(bName));
+        
+        request.onsuccess = (e) => {
+            resolve(e.target.result);
+        };
+
+        request.onerror = (e) => {
+            console.error("Error retrieving alias:", e.target.error);
+            resolve(null);
+        };
+    });
+}
+// --- End IndexedDB Functions ---
+
+
+// AI Levenshtein
+function levenshtein(a, b) {
+    const matrix = [];
+    for(let i=0; i<=b.length; i++) matrix[i] = [i];
+    for(let j=0; j<=a.length; j++) matrix[0][j] = j;
+    for(let i=1; i<=b.length; i++) {
+        for(let j=1; j<=a.length; j++) {
+            if(b.charAt(i-1)==a.charAt(j-1)) matrix[i][j] = matrix[i-1][j-1];
+            else matrix[i][j] = Math.min(matrix[i-1][j-1]+1, Math.min(matrix[i][j-1]+1, matrix[i-1][j]+1));
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function safeSet(id, v){ if(document.getElementById(id)) document.getElementById(id).textContent = v; }
+function cleanPrice(v) { return parseFloat(String(v||0).replace(/[^0-9.]/g, "")) || 0; }
+
+function normalize(s) { 
+    return String(s||"").toLowerCase()
+        .replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
+        .replace(/al-/g, "").replace(/al /g, "").replace(/bin /g, "").replace(/abu /g, "")
+        .replace(/mr /g, "").replace(/mrs /g, "")
+        .replace(/[^\w\u0600-\u06FF]/g," ").trim(); 
+}
+
+function parseDate(v) {
+    if(!v && v!==0) return null;
+    if(typeof v === 'number') return new Date((v - 25569)*86400000);
+    if(typeof v === 'string') {
+        if(v.includes('-')) { let p = v.split(' ')[0].split('-'); if(p[0].length===4) return new Date(p[0],p[1]-1,p[2]); return new Date(p[2],p[1]-1,p[0]); }
+        if(v.includes('/')) { let p = v.split(' ')[0].split('/'); if(p[0].length===4) return new Date(p[0],p[1]-1,p[2]); return new Date(p[2],p[1]-1,p[0]); }
+    }
+    return null;
+}
+function toENDateStr(d) { if(!d) return "-"; return d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit'}); }
+function getParts(name) { return normalize(name).split(" ").filter(x => x.length > 2); }
+
+// V18.0: Diagnostic Difference
+function getDiffDiagnosis(diff, bPriceNet, taxMultiplier) {
+    const absDiff = Math.abs(diff);
+    if (absDiff < 5) return "مطابقة تامة"; // Almost zero difference
+    
+    // Check for Tax/Muni difference (17.5%)
+    const taxDiff = bPriceNet * (taxMultiplier - 1);
+    if (Math.abs(absDiff - taxDiff) < 5) return "فرق ضريبة/بلدية";
+
+    // Since we don't know the exact price per night, we check if the difference is a common night price variation (e.g., 20% of net price, covering an extra night at minimum price or a price adjustment)
+    const nightGuess = bPriceNet * 0.25; // Heuristic: maybe 25% of net booking price is one night
+    if (absDiff > nightGuess) return diff > 0 ? "تمديد ليلة محتمل" : "تخفيض سعر/خصم";
+
+    return diff > 0 ? "زيادة غير مشخصة" : "نقصان غير مشخص";
+}
+
+
+// UI - Initialize event listeners after DOM is ready
+// This will be handled in init() method
+
+async function readSheet(file) {
+    return new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = e => { const wb = XLSX.read(e.target.result, {type:'array'}); resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1})); };
+        r.readAsArrayBuffer(file);
+    });
+}
+function getData(raw, keys) {
+    let hRow = -1; 
+    for(let i=0; i<20; i++) { if(raw[i] && keys.every(k => JSON.stringify(raw[i]).includes(k))) { hRow=i; break; } }
+    if(hRow===-1) return [];
+    let headers = raw[hRow].map(x=>String(x||"").trim());
+    return raw.slice(hRow+1).map(r => { let obj={}; headers.forEach((h,i)=>obj[h]=r[i]); return obj; });
+}
+
+async function startEngine() {
+    const f1 = document.getElementById('nazeelFile').files[0];
+    const f2 = document.getElementById('bookingFile').files[0];
+    if(!f1 || !f2) { alert("⚠️ يرجى رفع الملفات"); return; }
+
+    document.getElementById('loader').style.display = 'flex';
+    document.getElementById('uploadCard').style.display = 'none';
+
+    const taxP = parseFloat(document.getElementById('taxVal').value) || 0;
+    const muniP = parseFloat(document.getElementById('muniVal').value) || 0;
+    const tax = 1 + ((taxP + muniP) / 100);
+
+    await initDB(); // V18.0: Initialize IndexedDB
+
+    setTimeout(async () => {
+        try {
+            const nRaw = await readSheet(f1); const bRaw = await readSheet(f2);
+            cachedN = getData(nRaw, ["إسم العميل"]); 
+            let tempB = getData(bRaw, ["رقم الحجز", "السعر"]);
+
+            let minD = null, maxD = null;
+            cachedN.forEach(r => { let d = parseDate(r["تاريخ الدخول"]); if(d) { if(!minD || d<minD) minD=d; if(!maxD || d>maxD) maxD=d; } });
+            if(minD && maxD) {
+                minD.setDate(minD.getDate()-1); maxD.setDate(maxD.getDate()+1);
+                cachedB = tempB.filter(b => { let d = parseDate(b["تسجيل الوصول"]); return !d || (d>=minD && d<=maxD); });
+            } else { cachedB = tempB; }
+
+            process(cachedB, cachedN, tax);
+            
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('controlPanel').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'grid';
+            document.getElementById('resultsArea').style.display = 'block';
+
+        } catch(e) { 
+            alert("Error: " + e.message); 
+            const loader = document.getElementById('loader');
+            const uploadCard = document.getElementById('uploadCard');
+            if(loader) loader.style.display = 'none';
+            if(uploadCard) uploadCard.style.display = 'block';
+        }
+    }, 100);
+}
+
+async function process(booking, nazeel, tax) {
+    allRowsData = [];
+    let s = { book:0, match:0, money:0, recover:0, group:0, miss:0, revB:0, revN:0 };
+    let sub = { ok:0, can:0, nos:0 };
+    let takenNazeel = new Set();
+    let processedBooking = new Set(); 
+
+    const refKey = Object.keys(nazeel[0]||{}).find(k => k.includes("مرجع") || k.includes("مصدر")) || "";
+    
+    booking.forEach(b => {
+        s.book++;
+        let st = String(b["الحالة"]||"").toLowerCase();
+        if(st.includes("ok")) sub.ok++; else if(st.includes("cancel")) sub.can++; else sub.nos++;
+    });
+
+    // V18.0: 0. Alias Mapping (The Memory)
+    await Promise.all(booking.map(async (b, idx) => {
+        if(processedBooking.has(idx)) return;
+        const bName = b["اسم الضيف\\الضيوف"] || b["اسم الضيف"];
+        const alias = await getAlias(bName);
+        
+        if (alias) {
+            let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+            let match = pool.find(x => normalize(x.n["إسم العميل"]).includes(alias.nName));
+            
+            if (match) {
+                processedBooking.add(idx); takenNazeel.add(match.i);
+                storeResult(b, match.n, "alias", s, tax);
+            }
+        }
+    }));
+
+
+    // 1. Grouping
+    let groups = {};
+    booking.forEach((b, idx) => {
+        if(processedBooking.has(idx)) return; // V18.0: Skip if already processed by alias
+        let name = normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
+        if(!groups[name]) groups[name] = [];
+        groups[name].push({data: b, idx: idx});
+    });
+
+    for(let name in groups) {
+        let group = groups[name];
+        if(group.length < 2) continue;
+        let totalExp = group.reduce((sum, item) => sum + (cleanPrice(item.data["السعر"])*tax), 0);
+        let minDate = group.reduce((min, item) => { let d=parseDate(item.data["تسجيل الوصول"]); return (!min||d<min)?d:min; }, null);
+        let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+        let match = pool.find(x => {
+            let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+            let nDate = parseDate(x.n["تاريخ الدخول"]);
+            let priceOk = Math.abs(nPrice - totalExp) <= 10;
+            let dateOk = minDate && nDate && Math.abs((nDate - minDate)/864e5) <= 2;
+            return priceOk && dateOk;
+        });
+        if(match) {
+            takenNazeel.add(match.i);
+            group.forEach((item, i) => {
+                processedBooking.add(item.idx);
+                storeResult(item.data, (i===0?match.n:null), "group", s, tax, i===0);
+            });
+        }
+    }
+
+    // 2. Waterfall (Individual)
+    booking.forEach((b, idx) => {
+        if(processedBooking.has(idx)) return;
+        const bRef = String(b["رقم الحجز"]||"").trim();
+        const bName = normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
+        const bPrice = cleanPrice(b["السعر"]);
+        const expPrice = bPrice * tax;
+        const bDate = parseDate(b["تسجيل الوصول"]);
+        
+        let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+        let match = null, type = "";
+
+        // Ref
+        if(refKey && bRef) {
+            let refMatches = pool.filter(x => String(x.n[refKey]||"").includes(bRef));
+            if(refMatches.length > 0) {
+                let totalNazeelPrice = refMatches.reduce((sum, m) => sum + cleanPrice(m.n["الايجار الكلي"]||m.n["الاجمالي"]), 0);
+                let firstMatch = refMatches[0];
+                refMatches.forEach(m => takenNazeel.add(m.i));
+                processedBooking.add(idx);
+                storeResult(b, firstMatch.n, "ref", s, tax, false, totalNazeelPrice);
+                return;
+            }
+        }
+
+        // Name
+        if(!match) {
+            let bParts = getParts(bName);
+            match = pool.find(x => {
+                let nName = normalize(x.n["إسم العميل"]);
+                let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+                let nDate = parseDate(x.n["تاريخ الدخول"]);
+                let simScore = 0;
+                if(bParts.length > 0) {
+                    let nParts = getParts(nName);
+                    bParts.forEach(bp => { if(nParts.some(np => levenshtein(bp, np) <= 1)) simScore++; });
+                }
+                let nameHit = (simScore >= 2) || (bParts.length === 1 && simScore === 1);
+                let priceHit = Math.abs(nPrice - expPrice) < 10;
+                let dateHit = bDate && nDate && Math.abs((nDate - bDate)/864e5) <= 1.5;
+                return nameHit && (priceHit || dateHit);
+            });
+            if(match) type = "name";
+        }
+
+        if(match) {
+            processedBooking.add(idx); takenNazeel.add(match.i);
+            storeResult(b, match.n, type, s, tax);
+        }
+    });
+
+    // V18.0: 3. Behavioral Extension Check
+    booking.forEach((b, idx) => {
+        if(processedBooking.has(idx)) return;
+        
+        const bPrice = cleanPrice(b["السعر"]);
+        const expPrice = bPrice * tax;
+        const bDate = parseDate(b["تسجيل الوصول"]);
+        const bOutDate = parseDate(b["تاريخ المغادرة"]);
+
+        let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+
+        // Find a Nazeel booking whose check-out date is AFTER Booking's check-out date
+        let match = pool.find(x => {
+            let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+            let nDate = parseDate(x.n["تاريخ الدخول"]);
+            let nOutDate = parseDate(x.n["تاريخ الخروج"]);
+            
+            if(!bDate || !nDate || !bOutDate || !nOutDate) return false;
+
+            // Date match check-in (1 day tolerance)
+            let dateMatch = Math.abs((nDate - bDate)/864e5) < 1.0; 
+            // Extension check: Nazeel Check-out is AFTER Booking Check-out
+            let extensionHit = (nOutDate > bOutDate);
+            // Price must be close, assuming no extra services
+            let priceMatch = Math.abs(nPrice - expPrice) < 15; 
+
+            return dateMatch && extensionHit && priceMatch;
+        });
+
+        if(match) {
+            processedBooking.add(idx); takenNazeel.add(match.i);
+            storeResult(b, match.n, "extension", s, tax);
+        }
+    });
+    
+    // 4. ORPHAN SCAVENGER (Price/Date Guess)
+    booking.forEach((b, idx) => {
+        if(processedBooking.has(idx)) return; 
+
+        const bPrice = cleanPrice(b["السعر"]);
+        const expPrice = bPrice * tax;
+        const bDate = parseDate(b["تسجيل الوصول"]);
+
+        let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+        
+        let match = pool.find(x => {
+            let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+            let nDate = parseDate(x.n["تاريخ الدخول"]);
+            if(!bDate || !nDate) return false;
+
+            let dateMatch = Math.abs((nDate - bDate)/864e5) < 1.0; 
+            let priceDiff = Math.abs(nPrice - expPrice);
+            let priceMatch = (priceDiff <= 3.0); 
+
+            return dateMatch && priceMatch;
+        });
+
+        if(match) {
+            processedBooking.add(idx); takenNazeel.add(match.i);
+            storeResult(b, match.n, "guess", s, tax);
+        } else {
+            storeResult(b, null, "miss", s, tax);
+        }
+    });
+
+    await applyManuals(s); // V18.0: This now reads from IndexedDB
+    updateStats(s, sub);
+    if (typeof window.renderTable === 'function') {
+        window.renderTable(); 
+    }
+}
+
+function storeResult(b, n, type, s, tax, isGroupHead, totalNazeelPrice) {
+    let bName = b["اسم الضيف\\الضيوف"] || b["اسم الضيف"] || b["تم الحجز من قِبل"];
+    let status = String(b["الحالة"]||"").toLowerCase();
+    let isOk = status.includes("ok");
+    let bPriceNet = cleanPrice(b["السعر"]);
+    let bPrice = bPriceNet * tax;
+    let nPrice = totalNazeelPrice || (n ? cleanPrice(n["الايجار الكلي"]||n["الاجمالي"]) : 0);
+    
+    if(type !== "miss") {
+        if(!isOk) { s.recover++; type="conflict"; }
+        else {
+            if(type==="ref"||type==="name"||type==="alias") s.match++;
+            if(type==="money"||type==="guess"||type==="extension") s.money++; // V18.0: extension is money/fingerprint match
+            if(type==="group") s.group++;
+        }
+        s.revB += bPrice;
+        if(type !== "group" || isGroupHead) s.revN += nPrice; 
+    } else { if(isOk) s.miss++; }
+
+    allRowsData.push({
+        b: b, n: n, type: type, bName: bName, status: status, isOk: isOk,
+        bPrice: bPrice, nPrice: nPrice, bPriceNet: bPriceNet, tax: tax,
+        timestamp: parseDate(b["تسجيل الوصول"]) || 0
+    });
+}
+
+function updateStats(s, sub) {
+    // V18.0: Combine group/alias and money/extension
+    let combinedMatch = s.match + s.group;
+    let combinedMoney = s.money;
+
+    safeSet('kpiBook', s.book); safeSet('kpiOk', combinedMatch);
+    safeSet('kpiGroup', s.group); safeSet('kpiMoney', combinedMoney);
+    safeSet('kpiRecover', s.recover);
+    safeSet('kpiRevB', s.revB.toLocaleString()); safeSet('kpiRevN', s.revN.toLocaleString());
+    safeSet('kpiDiff', (s.revN - s.revB).toLocaleString());
+    safeSet('subOk', sub.ok); safeSet('subCan', sub.can); safeSet('subNos', sub.nos);
+}
+
+// متغير لتخزين فلتر الحالة
+let statusFilter = null;
+
+function setFilter(type, btn) {
+    // إزالة التفعيل من جميع الفلاتر
+    document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = type;
+    statusFilter = null; // إعادة تعيين فلتر الحالة عند استخدام الفلاتر العادية
+    if (typeof window.renderTable === 'function') {
+        window.renderTable();
+    }
+}
+
+function setStatusFilter(status, btn) {
+    // إزالة التفعيل من جميع الفلاتر
+    document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    statusFilter = status; // حفظ فلتر الحالة
+    currentFilter = 'all'; // إعادة تعيين الفلتر العادي
+    if (typeof window.renderTable === 'function') {
+        window.renderTable();
+    }
+}
+
+function filterTable() { 
+    if (typeof window.renderTable === 'function') {
+        window.renderTable(); 
+    }
+}
+
+function sortTable(n) {
+    let table = document.getElementById("mainTable");
+    let dir = table.getAttribute("data-sort-dir") === "asc" ? "desc" : "asc";
+    table.setAttribute("data-sort-dir", dir);
+    table.setAttribute("data-sort-col", n);
+
+    allRowsData.sort((a, b) => {
+        let valA, valB;
+        switch(n) {
+            case 0: return (dir === 'asc') ? 1 : -1; 
+            case 1: valA = a.bName; valB = b.bName; break;
+            case 2: valA = a.status; valB = b.status; break;
+            case 3: valA = a.n ? a.n["إسم العميل"] : ""; valB = b.n ? b.n["إسم العميل"] : ""; break;
+            case 4: valA = a.type; valB = b.type; break;
+            case 5: valA = a.bPrice; valB = b.bPrice; break;
+            case 6: valA = a.nPrice; valB = b.nPrice; break;
+            case 7: valA = (a.nPrice - a.bPrice); valB = (b.nPrice - b.bPrice); break;
+            case 8: valA = a.timestamp; valB = b.timestamp; break;
+        }
+        if (typeof valA === 'string') { return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA); }
+        else { return dir === 'asc' ? valA - valB : valB - valA; }
+    });
+    renderTable();
+}
+
+// V18.0: Save alias to IndexedDB instead of sessionStorage
+function markMerged(btn, bName) {
+    let tr = btn.closest('tr');
+    let nNameEl = tr.querySelector('td:nth-child(4)');
+    let nName = prompt(\`أدخل اسم العميل في نزيل (مطابق لـ \${bName}):\`, nNameEl.innerText.trim());
+    
+    if (nName && nName.trim() !== '-' && nName.trim() !== '') {
+        saveAlias(bName, nName);
+
+        let rowData = allRowsData.find(r => r.bName === bName && r.type === 'miss');
+        if(rowData) {
+            rowData.type = 'alias';
+            
+            // Heuristic Nazeel matching for display purposes only
+            let matchN = cachedN.find(n => normalize(n["إسم العميل"]) === normalize(nName));
+            if(matchN) {
+                rowData.n = matchN;
+                rowData.nPrice = cleanPrice(matchN["الايجار الكلي"]||matchN["الاجمالي"]);
+                let el = document.getElementById('kpiRevB');
+                let elN = document.getElementById('kpiRevN');
+                el.innerText = (parseFloat(el.innerText.replace(/,/g,'')) + rowData.bPrice).toLocaleString();
+                elN.innerText = (parseFloat(elN.innerText.replace(/,/g,'')) + rowData.nPrice).toLocaleString();
+            }
+
+            // Update stats and re-render
+            const kpiOk = document.getElementById('kpiOk'); kpiOk.textContent = parseInt(kpiOk.textContent) + 1;
+            renderTable(); 
+        }
+    }
+}
+
+// V18.0: This is no longer needed since Alias mapping runs in process(). It is replaced by the async loop in process.
+async function applyManuals(s) {
+    // This function is now mostly redundant as the 'alias' check is done inside the main process loop using getAlias.
+    // However, it can be used to re-calculate stats for *missed* bookings that were manually merged
+    // in this session before the alias check ran, or for consistency.
+    // For now, let's keep it simple: the process handles the memory.
+}
+
+</script>
+
+</body>
+</html>`;
+    }
+
+    init() {
+        // BookingNazeelComparePage initialized
+        
+        // Initialize variables
+        if (!window.bookingNazeelVars) {
+            window.currentFilter = 'all';
+            window.statusFilter = null;
+            window.allRowsData = [];
+            window.cachedN = null;
+            window.cachedB = null;
+            window.db = null;
+            window.bookingNazeelVars = true;
+        }
+
+        // --- IndexedDB Functions (V18.0) ---
+        window.initDB = function() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('AdoraMatchDB', 1);
+
+                request.onupgradeneeded = (e) => {
+                    window.db = e.target.result;
+                    if (!window.db.objectStoreNames.contains('aliases')) {
+                        window.db.createObjectStore('aliases', { keyPath: 'bName' });
+                    }
+                };
+
+                request.onsuccess = (e) => {
+                    window.db = e.target.result;
+                    resolve(window.db);
+                };
+
+                request.onerror = (e) => {
+                    console.error("IndexedDB error:", e.target.error);
+                    reject(e.target.error);
+                };
+            });
+        };
+
+        window.saveAlias = function(bName, nName) {
+            if(!window.db) return;
+            const transaction = window.db.transaction(['aliases'], 'readwrite');
+            const store = transaction.objectStore('aliases');
+            store.put({ bName: window.normalize(bName), nName: window.normalize(nName) });
+        };
+
+        window.getAlias = function(bName) {
+            return new Promise((resolve, reject) => {
+                if(!window.db) { resolve(null); return; }
+                const transaction = window.db.transaction(['aliases'], 'readonly');
+                const store = transaction.objectStore('aliases');
+                const request = store.get(window.normalize(bName));
+                
+                request.onsuccess = (e) => {
+                    resolve(e.target.result);
+                };
+
+                request.onerror = (e) => {
+                    // Error retrieving alias - return null silently
+                    resolve(null);
+                };
+            });
+        };
+
+        // AI Levenshtein
+        window.levenshtein = function(a, b) {
+            const matrix = [];
+            for(let i=0; i<=b.length; i++) matrix[i] = [i];
+            for(let j=0; j<=a.length; j++) matrix[0][j] = j;
+            for(let i=1; i<=b.length; i++) {
+                for(let j=1; j<=a.length; j++) {
+                    if(b.charAt(i-1)==a.charAt(j-1)) matrix[i][j] = matrix[i-1][j-1];
+                    else matrix[i][j] = Math.min(matrix[i-1][j-1]+1, Math.min(matrix[i][j-1]+1, matrix[i-1][j]+1));
+                }
+            }
+            return matrix[b.length][a.length];
+        };
+
+        window.safeSet = function(id, v){ if(document.getElementById(id)) document.getElementById(id).textContent = v; };
+        window.cleanPrice = function(v) { return parseFloat(String(v||0).replace(/[^0-9.]/g, "")) || 0; };
+
+        // Use memoized normalize if available
+        window.normalize = typeof memoizedNormalize !== 'undefined' 
+            ? memoizedNormalize 
+            : function(s) { 
+            return String(s||"").toLowerCase()
+                .replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
+                .replace(/al-/g, "").replace(/al /g, "").replace(/bin /g, "").replace(/abu /g, "")
+                .replace(/mr /g, "").replace(/mrs /g, "")
+                .replace(/[^\w\u0600-\u06FF]/g," ").trim(); 
+        };
+
+        window.parseDate = function(v) {
+            if(!v && v!==0) return null;
+            if(typeof v === 'number') return new Date((v - 25569)*86400000);
+            if(typeof v === 'string') {
+                if(v.includes('-')) { let p = v.split(' ')[0].split('-'); if(p[0].length===4) return new Date(p[0],p[1]-1,p[2]); return new Date(p[2],p[1]-1,p[0]); }
+                if(v.includes('/')) { let p = v.split(' ')[0].split('/'); if(p[0].length===4) return new Date(p[0],p[1]-1,p[2]); return new Date(p[2],p[1]-1,p[0]); }
+            }
+            return null;
+        };
+        window.toENDateStr = function(d) { if(!d) return "-"; return d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit'}); };
+        window.getParts = function(name) { return window.normalize(name).split(" ").filter(x => x.length > 2); };
+
+        window.getDiffDiagnosis = function(diff, bPriceNet, taxMultiplier) {
+            const absDiff = Math.abs(diff);
+            if (absDiff < 5) return "مطابقة تامة";
+            const taxDiff = bPriceNet * (taxMultiplier - 1);
+            if (Math.abs(absDiff - taxDiff) < 5) return "فرق ضريبة/بلدية";
+            const nightGuess = bPriceNet * 0.25;
+            if (absDiff > nightGuess) return diff > 0 ? "تمديد ليلة محتمل" : "تخفيض سعر/خصم";
+            return diff > 0 ? "زيادة غير مشخصة" : "نقصان غير مشخص";
+        };
+
+        // UI Event Listeners
+        setTimeout(() => {
+            const nazeelFile = document.getElementById('nazeelFile');
+            const bookingFile = document.getElementById('bookingFile');
+            if(nazeelFile) {
+                nazeelFile.addEventListener('change', function() { 
+                    const dz = document.getElementById('dz-naz');
+                    const progress = document.getElementById('progress-naz');
+                    if(dz) dz.classList.add('file-loaded');
+                    // شريط تحميل 3 ثوانٍ
+                    if(progress) {
+                        progress.style.width = '0%';
+                        let width = 0;
+                        const interval = setInterval(() => {
+                            width += 1;
+                            progress.style.width = width + '%';
+                            if(width >= 100) {
+                                clearInterval(interval);
+                                setTimeout(() => {
+                                    progress.style.width = '0%';
+                                }, 500);
+                            }
+                        }, 30); // 3000ms / 100 = 30ms per step
+                    }
+                });
+            }
+            if(bookingFile) {
+                bookingFile.addEventListener('change', function() { 
+                    const dz = document.getElementById('dz-book');
+                    const progress = document.getElementById('progress-book');
+                    if(dz) dz.classList.add('file-loaded');
+                    // شريط تحميل 3 ثوانٍ
+                    if(progress) {
+                        progress.style.width = '0%';
+                        let width = 0;
+                        const interval = setInterval(() => {
+                            width += 1;
+                            progress.style.width = width + '%';
+                            if(width >= 100) {
+                                clearInterval(interval);
+                                setTimeout(() => {
+                                    progress.style.width = '0%';
+                                }, 500);
+                            }
+                        }, 30); // 3000ms / 100 = 30ms per step
+                    }
+                });
+            }
+            
+            // Debounced search for better performance
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && typeof debounce === 'function') {
+                const debouncedFilter = debounce(() => {
+                    if (typeof window.filterTable === 'function') {
+                        window.filterTable();
+                    }
+                }, 300);
+                searchInput.addEventListener('input', debouncedFilter);
+                searchInput.addEventListener('keyup', debouncedFilter);
+            }
+        }, 100);
+
+        window.readSheet = function(file) {
+            return new Promise(resolve => {
+                const r = new FileReader();
+                r.onload = e => { const wb = XLSX.read(e.target.result, {type:'array'}); resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1})); };
+                r.readAsArrayBuffer(file);
+            });
+        };
+
+        window.getData = function(raw, keys) {
+            let hRow = -1; 
+            for(let i=0; i<20; i++) { if(raw[i] && keys.every(k => JSON.stringify(raw[i]).includes(k))) { hRow=i; break; } }
+            if(hRow===-1) return [];
+            let headers = raw[hRow].map(x=>String(x||"").trim());
+            return raw.slice(hRow+1).map(r => { let obj={}; headers.forEach((h,i)=>obj[h]=r[i]); return obj; });
+        };
+
+        window.startEngine = async function() {
+            const f1 = document.getElementById('nazeelFile');
+            const f2 = document.getElementById('bookingFile');
+            if(!f1 || !f2 || !f1.files[0] || !f2.files[0]) { 
+                alert("⚠️ يرجى رفع الملفات"); 
+                return; 
+            }
+
+            const loader = document.getElementById('loader');
+            const uploadCard = document.getElementById('uploadCard');
+            if(loader) loader.style.display = 'flex';
+            if(uploadCard) uploadCard.style.display = 'none';
+
+            const taxVal = document.getElementById('taxVal');
+            const muniVal = document.getElementById('muniVal');
+            const taxP = taxVal ? parseFloat(taxVal.value) || 0 : 0;
+            const muniP = muniVal ? parseFloat(muniVal.value) || 0 : 0;
+            const tax = 1 + ((taxP + muniP) / 100);
+
+            await window.initDB();
+
+            // Use requestAnimationFrame instead of setTimeout for better performance
+            window.requestAnimationFrame(async () => {
+                try {
+                    const nRaw = await window.readSheet(f1.files[0]); 
+                    const bRaw = await window.readSheet(f2.files[0]);
+                    window.cachedN = window.getData(nRaw, ["إسم العميل"]); 
+                    let tempB = window.getData(bRaw, ["رقم الحجز", "السعر"]);
+
+                    let minD = null, maxD = null;
+                    window.cachedN.forEach(r => { 
+                        let d = window.parseDate(r["تاريخ الدخول"]); 
+                        if(d) { 
+                            if(!minD || d<minD) minD=d; 
+                            if(!maxD || d>maxD) maxD=d; 
+                        } 
+                    });
+                    if(minD && maxD) {
+                        minD.setDate(minD.getDate()-1); 
+                        maxD.setDate(maxD.getDate()+1);
+                        window.cachedB = tempB.filter(b => { 
+                            let d = window.parseDate(b["تسجيل الوصول"]); 
+                            return !d || (d>=minD && d<=maxD); 
+                        });
+                    } else { 
+                        window.cachedB = tempB; 
+                    }
+
+                    if(typeof window.process === 'function') {
+                        await window.process(window.cachedB, window.cachedN, tax);
+                    }
+                    
+                    if(loader) loader.style.display = 'none';
+                    const controlPanel = document.getElementById('controlPanel');
+                    const dashboard = document.getElementById('dashboard');
+                    const resultsArea = document.getElementById('resultsArea');
+                    if(controlPanel) controlPanel.style.display = 'flex';
+                    if(dashboard) dashboard.style.display = 'grid';
+                    if(resultsArea) resultsArea.style.display = 'block';
+
+                } catch(e) { 
+                    alert("Error: " + e.message); 
+                    if(loader) loader.style.display = 'none';
+                    if(uploadCard) uploadCard.style.display = 'block';
+                }
+            }, 100);
+        };
+
+        window.process = async function(booking, nazeel, tax) {
+            window.allRowsData = [];
+            let s = { book:0, match:0, money:0, recover:0, group:0, miss:0, revB:0, revN:0 };
+            let sub = { ok:0, can:0, nos:0 };
+            let takenNazeel = new Set();
+            let processedBooking = new Set(); 
+
+            const refKey = Object.keys(nazeel[0]||{}).find(k => k.includes("مرجع") || k.includes("مصدر")) || "";
+            
+            booking.forEach(b => {
+                s.book++;
+                let st = String(b["الحالة"]||"").toLowerCase();
+                if(st.includes("ok")) sub.ok++; else if(st.includes("cancel")) sub.can++; else sub.nos++;
+            });
+
+            // V18.0: 0. Alias Mapping (The Memory)
+            await Promise.all(booking.map(async (b, idx) => {
+                if(processedBooking.has(idx)) return;
+                const bName = b["اسم الضيف\\الضيوف"] || b["اسم الضيف"];
+                const alias = await window.getAlias(bName);
+                
+                if (alias) {
+                    let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+                    let match = pool.find(x => window.normalize(x.n["إسم العميل"]).includes(alias.nName));
+                    
+                    if (match) {
+                        processedBooking.add(idx); takenNazeel.add(match.i);
+                        window.storeResult(b, match.n, "alias", s, tax);
+                    }
+                }
+            }));
+
+            // 1. Grouping
+            let groups = {};
+            booking.forEach((b, idx) => {
+                if(processedBooking.has(idx)) return;
+                let name = window.normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
+                if(!groups[name]) groups[name] = [];
+                groups[name].push({data: b, idx: idx});
+            });
+
+            for(let name in groups) {
+                let group = groups[name];
+                if(group.length < 2) continue;
+                let totalExp = group.reduce((sum, item) => sum + (window.cleanPrice(item.data["السعر"])*tax), 0);
+                let minDate = group.reduce((min, item) => { let d=window.parseDate(item.data["تسجيل الوصول"]); return (!min||d<min)?d:min; }, null);
+                let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+                let match = pool.find(x => {
+                    let nPrice = window.cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+                    let nDate = window.parseDate(x.n["تاريخ الدخول"]);
+                    let priceOk = Math.abs(nPrice - totalExp) <= 10;
+                    let dateOk = minDate && nDate && Math.abs((nDate - minDate)/864e5) <= 2;
+                    return priceOk && dateOk;
+                });
+                if(match) {
+                    takenNazeel.add(match.i);
+                    group.forEach((item, i) => {
+                        processedBooking.add(item.idx);
+                        window.storeResult(item.data, (i===0?match.n:null), "group", s, tax, i===0);
+                    });
+                }
+            }
+
+            // 2. Waterfall (Individual)
+            booking.forEach((b, idx) => {
+                if(processedBooking.has(idx)) return;
+                const bRef = String(b["رقم الحجز"]||"").trim();
+                const bName = window.normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
+                const bPrice = window.cleanPrice(b["السعر"]);
+                const expPrice = bPrice * tax;
+                const bDate = window.parseDate(b["تسجيل الوصول"]);
+                
+                let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+                let match = null, type = "";
+
+                // Ref
+                if(refKey && bRef) {
+                    let refMatches = pool.filter(x => String(x.n[refKey]||"").includes(bRef));
+                    if(refMatches.length > 0) {
+                        let totalNazeelPrice = refMatches.reduce((sum, m) => sum + window.cleanPrice(m.n["الايجار الكلي"]||m.n["الاجمالي"]), 0);
+                        let firstMatch = refMatches[0];
+                        refMatches.forEach(m => takenNazeel.add(m.i));
+                        processedBooking.add(idx);
+                        window.storeResult(b, firstMatch.n, "ref", s, tax, false, totalNazeelPrice);
+                        return;
+                    }
+                }
+
+                // Name
+                if(!match) {
+                    let bParts = window.getParts(bName);
+                    match = pool.find(x => {
+                        let nName = window.normalize(x.n["إسم العميل"]);
+                        let nPrice = window.cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+                        let nDate = window.parseDate(x.n["تاريخ الدخول"]);
+                        let simScore = 0;
+                        if(bParts.length > 0) {
+                            let nParts = window.getParts(nName);
+                            bParts.forEach(bp => { if(nParts.some(np => window.levenshtein(bp, np) <= 1)) simScore++; });
+                        }
+                        let nameHit = (simScore >= 2) || (bParts.length === 1 && simScore === 1);
+                        let priceHit = Math.abs(nPrice - expPrice) < 10;
+                        let dateHit = bDate && nDate && Math.abs((nDate - bDate)/864e5) <= 1.5;
+                        return nameHit && (priceHit || dateHit);
+                    });
+                    if(match) type = "name";
+                }
+
+                if(match) {
+                    processedBooking.add(idx); takenNazeel.add(match.i);
+                    window.storeResult(b, match.n, type, s, tax);
+                }
+            });
+
+            // V18.0: 3. Behavioral Extension Check
+            booking.forEach((b, idx) => {
+                if(processedBooking.has(idx)) return;
+                
+                const bPrice = window.cleanPrice(b["السعر"]);
+                const expPrice = bPrice * tax;
+                const bDate = window.parseDate(b["تسجيل الوصول"]);
+                const bOutDate = window.parseDate(b["تاريخ المغادرة"]);
+
+                let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+
+                let match = pool.find(x => {
+                    let nPrice = window.cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+                    let nDate = window.parseDate(x.n["تاريخ الدخول"]);
+                    let nOutDate = window.parseDate(x.n["تاريخ الخروج"]);
+                    
+                    if(!bDate || !nDate || !bOutDate || !nOutDate) return false;
+
+                    let dateMatch = Math.abs((nDate - bDate)/864e5) < 1.0; 
+                    let extensionHit = (nOutDate > bOutDate);
+                    let priceMatch = Math.abs(nPrice - expPrice) < 15; 
+
+                    return dateMatch && extensionHit && priceMatch;
+                });
+
+                if(match) {
+                    processedBooking.add(idx); takenNazeel.add(match.i);
+                    window.storeResult(b, match.n, "extension", s, tax);
+                }
+            });
+            
+            // 4. ORPHAN SCAVENGER (Price/Date Guess)
+            booking.forEach((b, idx) => {
+                if(processedBooking.has(idx)) return; 
+
+                const bPrice = window.cleanPrice(b["السعر"]);
+                const expPrice = bPrice * tax;
+                const bDate = window.parseDate(b["تسجيل الوصول"]);
+
+                let pool = nazeel.map((n,i)=>({n,i})).filter(x => !takenNazeel.has(x.i));
+                
+                let match = pool.find(x => {
+                    let nPrice = window.cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
+                    let nDate = window.parseDate(x.n["تاريخ الدخول"]);
+                    if(!bDate || !nDate) return false;
+
+                    let dateMatch = Math.abs((nDate - bDate)/864e5) < 1.0; 
+                    let priceDiff = Math.abs(nPrice - expPrice);
+                    let priceMatch = (priceDiff <= 3.0); 
+
+                    return dateMatch && priceMatch;
+                });
+
+                if(match) {
+                    processedBooking.add(idx); takenNazeel.add(match.i);
+                    window.storeResult(b, match.n, "guess", s, tax);
+                } else {
+                    window.storeResult(b, null, "miss", s, tax);
+                }
+            });
+
+            await window.applyManuals(s);
+            window.updateStats(s, sub);
+            window.renderTable(); 
+        };
+
+        window.storeResult = function(b, n, type, s, tax, isGroupHead, totalNazeelPrice) {
+            let bName = b["اسم الضيف\\الضيوف"] || b["اسم الضيف"] || b["تم الحجز من قِبل"];
+            let status = String(b["الحالة"]||"").toLowerCase();
+            let isOk = status.includes("ok");
+            let bPriceNet = window.cleanPrice(b["السعر"]);
+            let bPrice = bPriceNet * tax;
+            let nPrice = totalNazeelPrice || (n ? window.cleanPrice(n["الايجار الكلي"]||n["الاجمالي"]) : 0);
+            
+            if(type !== "miss") {
+                if(!isOk) { s.recover++; type="conflict"; }
+                else {
+                    if(type==="ref"||type==="name"||type==="alias") s.match++;
+                    if(type==="money"||type==="guess"||type==="extension") s.money++;
+                    if(type==="group") s.group++;
+                }
+                s.revB += bPrice;
+                if(type !== "group" || isGroupHead) s.revN += nPrice; 
+            } else { if(isOk) s.miss++; }
+
+            window.allRowsData.push({
+                b: b, n: n, type: type, bName: bName, status: status, isOk: isOk,
+                bPrice: bPrice, nPrice: nPrice, bPriceNet: bPriceNet, tax: tax,
+                timestamp: window.parseDate(b["تسجيل الوصول"]) || 0
+            });
+        };
+
+        window.renderTable = function() {
+            const tbody = document.querySelector('#mainTable tbody'); 
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            const taxMultiplier = parseFloat(document.getElementById('taxVal').value) / 100 + parseFloat(document.getElementById('muniVal').value) / 100 + 1;
+
+            if(!document.getElementById("mainTable").getAttribute("data-sort-col")) {
+                window.allRowsData.sort((a, b) => b.timestamp - a.timestamp);
+            }
+
+            window.allRowsData.forEach((row, idx) => {
+                // فلتر النوع (type)
+                let filters = window.currentFilter.split(',');
+                if(window.currentFilter !== 'all') {
+                    if (!filters.includes(row.type)) return;
+                }
+
+                // فلتر الحالة (مؤكد/ملغي)
+                if (window.statusFilter === 'confirmed' && !row.isOk) return;
+                if (window.statusFilter === 'cancelled' && row.isOk) return;
+
+                let term = document.getElementById('searchInput').value.toLowerCase();
+                if(term && !row.bName.toLowerCase().includes(term)) return;
+
+                let tr = document.createElement('tr');
+                tr.dataset.type = row.type;
+
+                let tag = "";
+                if(row.type==="ref") tag=`<span class="match-tag mt-ok">🆔 مرجع</span>`;
+                else if(row.type==="name") tag=`<span class="match-tag mt-ok">✨ اسم</span>`;
+                else if(row.type==="alias") tag=`<span class="match-tag mt-alias">🧠 ذاكرة</span>`;
+                else if(row.type==="money") tag=`<span class="match-tag mt-warn">💰 بصمة</span>`;
+                else if(row.type==="guess") tag=`<span class="match-tag mt-guess">🧩 تخمين ذكي</span>`;
+                else if(row.type==="extension") tag=`<span class="match-tag mt-ext">🟡 تمديد إقامة</span>`;
+                else if(row.type==="group") tag=`<span class="match-tag mt-grp">🔗 تجميع</span>`;
+                else if(row.type==="conflict") tag=`<span class="match-tag mt-err">⚠️ تسكين</span>`;
+                else tag=`<span class="match-tag mt-miss">❌ مفقود</span>`;
+
+                let stHtml = row.isOk ? `<span class="st-ok">مؤكد</span>` : `<span class="st-no">ملغي</span>`;
+                let bDate = window.toENDateStr(window.parseDate(row.b["تسجيل الوصول"]));
+                let bOut = window.toENDateStr(window.parseDate(row.b["تاريخ المغادرة"]));
+                let nDate = row.n ? window.toENDateStr(window.parseDate(row.n["تاريخ الدخول"])) : "-";
+                let nOut = row.n ? window.toENDateStr(window.parseDate(row.n["تاريخ الخروج"])) : "-";
+                let act = (row.type==="miss") ? `<br><button class="btn-mini bm-merge" onclick="markMerged(this, '${row.bName}')">دمج يدوي</button>` : "";
+
+                let diff = row.n ? (row.nPrice - row.bPrice) : 0;
+                let diffHtml = row.n ? (Math.abs(diff)<5 ? `<span class="diff-zero">0</span>` : `<span class="${diff>0?'diff-pos':'diff-neg'}">${diff.toFixed(0)}</span>`) : "-";
+                
+                let diffDiag = "";
+                if(row.n && row.type !== 'conflict' && row.type !== 'miss') {
+                     diffDiag = `<div class="diff-diag">(${window.getDiffDiagnosis(diff, row.bPriceNet, taxMultiplier)})</div>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${idx+1}</td>
+                    <td><div class="b-name">${row.bName}</div><div class="b-ref">${row.b["رقم الحجز"]||""}</div></td>
+                    <td>${stHtml}</td>
+                    <td>${row.n ? row.n["إسم العميل"] : "-"}</td>
+                    <td>${tag}${act}</td>
+                    <td><span class="price-val">${row.bPrice.toFixed(0)}</span></td>
+                    <td><span class="price-val">${row.n?row.nPrice.toFixed(0):'-'}</span></td>
+                    <td>${diffHtml}${diffDiag}</td>
+                    <td>
+                        <div class="d-box">
+                            <div class="d-line"><span class="d-dot dot-b"></span><span class="txt-b">B: ${bDate} ➝ ${bOut}</span></div>
+                            <div class="d-line"><span class="d-dot dot-n"></span><span class="txt-n">N: ${nDate} ➝ ${nOut}</span></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.updateStats = function(s, sub) {
+            let combinedMatch = s.match + s.group;
+            let combinedMoney = s.money;
+
+            window.safeSet('kpiBook', s.book); window.safeSet('kpiOk', combinedMatch);
+            window.safeSet('kpiGroup', s.group); window.safeSet('kpiMoney', combinedMoney);
+            window.safeSet('kpiRecover', s.recover);
+            window.safeSet('kpiRevB', s.revB.toLocaleString()); window.safeSet('kpiRevN', s.revN.toLocaleString());
+            window.safeSet('kpiDiff', (s.revN - s.revB).toLocaleString());
+            window.safeSet('subOk', sub.ok); window.safeSet('subCan', sub.can); window.safeSet('subNos', sub.nos);
+        };
+
+        // متغير لتخزين فلتر الحالة
+        window.statusFilter = null;
+
+        window.setFilter = function(type, btn) {
+            document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            window.currentFilter = type;
+            window.statusFilter = null; // إعادة تعيين فلتر الحالة عند استخدام الفلاتر العادية
+            window.renderTable();
+        };
+
+        window.setStatusFilter = function(status, btn) {
+            document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            window.statusFilter = status; // حفظ فلتر الحالة
+            window.currentFilter = 'all'; // إعادة تعيين الفلتر العادي
+            window.renderTable();
+        };
+
+        window.setStatusFilter = function(status, btn) {
+            document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            window.statusFilter = status; // حفظ فلتر الحالة
+            window.currentFilter = 'all'; // إعادة تعيين الفلتر العادي
+            window.renderTable();
+        };
+
+        window.filterTable = function() { window.renderTable(); };
+
+        window.sortTable = function(n) {
+            let table = document.getElementById("mainTable");
+            let dir = table.getAttribute("data-sort-dir") === "asc" ? "desc" : "asc";
+            table.setAttribute("data-sort-dir", dir);
+            table.setAttribute("data-sort-col", n);
+
+            window.allRowsData.sort((a, b) => {
+                let valA, valB;
+                switch(n) {
+                    case 0: return (dir === 'asc') ? 1 : -1; 
+                    case 1: valA = a.bName; valB = b.bName; break;
+                    case 2: valA = a.status; valB = b.status; break;
+                    case 3: valA = a.n ? a.n["إسم العميل"] : ""; valB = b.n ? b.n["إسم العميل"] : ""; break;
+                    case 4: valA = a.type; valB = b.type; break;
+                    case 5: valA = a.bPrice; valB = b.bPrice; break;
+                    case 6: valA = a.nPrice; valB = b.nPrice; break;
+                    case 7: valA = (a.nPrice - a.bPrice); valB = (b.nPrice - b.bPrice); break;
+                    case 8: valA = a.timestamp; valB = b.timestamp; break;
+                }
+                if (typeof valA === 'string') { return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA); }
+                else { return dir === 'asc' ? valA - valB : valB - valA; }
+            });
+            window.renderTable();
+        };
+
+        window.markMerged = function(btn, bName) {
+            let tr = btn.closest('tr');
+            let nNameEl = tr.querySelector('td:nth-child(4)');
+            let nName = prompt(`أدخل اسم العميل في نزيل (مطابق لـ ${bName}):`, nNameEl.innerText.trim());
+            
+            if (nName && nName.trim() !== '-' && nName.trim() !== '') {
+                window.saveAlias(bName, nName);
+
+                let rowData = window.allRowsData.find(r => r.bName === bName && r.type === 'miss');
+                if(rowData) {
+                    rowData.type = 'alias';
+                    
+                    let matchN = window.cachedN.find(n => window.normalize(n["إسم العميل"]) === window.normalize(nName));
+                    if(matchN) {
+                        rowData.n = matchN;
+                        rowData.nPrice = window.cleanPrice(matchN["الايجار الكلي"]||matchN["الاجمالي"]);
+                        let el = document.getElementById('kpiRevB');
+                        let elN = document.getElementById('kpiRevN');
+                        if(el) el.innerText = (parseFloat(el.innerText.replace(/,/g,'')) + rowData.bPrice).toLocaleString();
+                        if(elN) elN.innerText = (parseFloat(elN.innerText.replace(/,/g,'')) + rowData.nPrice).toLocaleString();
+                    }
+
+                    const kpiOk = document.getElementById('kpiOk'); 
+                    if(kpiOk) kpiOk.textContent = parseInt(kpiOk.textContent) + 1;
+                    window.renderTable(); 
+                }
+            }
+        };
+
+        window.applyManuals = async function(s) {
+            // This function is now mostly redundant as the 'alias' check is done inside the main process loop using getAlias.
+        };
+
+        window.exportExcel = function() {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(document.getElementById('mainTable'));
+            XLSX.utils.book_append_sheet(wb, ws, "Adora_Report");
+            XLSX.writeFile(wb, "Adora_Report.xlsx");
+        };
+    }
+}
+
+window.BookingNazeelComparePage = BookingNazeelComparePage;
