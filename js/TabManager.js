@@ -37,11 +37,13 @@ class TabManager {
         // التحقق من أن الصفحة المحفوظة موجودة في التبويبات المتاحة
         const tabExists = lastActiveTab && this.tabs.some(tab => tab.id === lastActiveTab);
 
-        // تفعيل الصفحة المحفوظة أو أول تبويب
+        // الفتح الافتراضي: المقارنة فقط؛ وإلا الصفحة المحفوظة أو أول تبويب
+        const defaultTabId = 'booking-nazeel-compare';
+        const hasCompare = this.tabs.some(tab => tab.id === defaultTabId);
         if (tabExists) {
             this.switchTab(lastActiveTab);
         } else if (this.tabs.length > 0) {
-            this.switchTab(this.tabs[0].id);
+            this.switchTab(hasCompare ? defaultTabId : this.tabs[0].id);
         }
     }
 
@@ -49,12 +51,9 @@ class TabManager {
      * Load tabs from Firebase
      */
     async loadTabs() {
-        // Default tabs (4 tabs) - Updated to remove Cashbox and Seasons
+        // مشروع المقارنة فقط — تبويب واحد (بوكينج ↔ نزيل)
         const allTabs = [
-            { id: 'pricing', label: 'منظومة التسعير', icon: '💰', order: 1 },
-            { id: 'matching', label: 'تنسيق بوكينج', icon: '🔍', order: 2 },
-            { id: 'booking-nazeel-compare', label: 'المقارنة', icon: '🎯', order: 3 },
-            // { id: 'monthly-yearly', label: 'يومي و شهري و سنوي مختلط', icon: '📊', order: 6 }
+            { id: 'booking-nazeel-compare', label: 'مراجعة المقارنة (بوكينج ↔ نزيل)', icon: '🎯', order: 1 }
         ];
 
         // Get user's selected departments
@@ -268,12 +267,7 @@ class TabManager {
             this.pages[tabId] = new PageClass();
         }
 
-        // Export page instance globally for easy access
-        if (tabId === 'matching') {
-            window.matchingPage = this.pages[tabId];
-        } else if (tabId === 'pricing') {
-            window.pricingPage = this.pages[tabId];
-        }
+        // Export page instance globally for easy access (مشروع المقارنة فقط)
 
         // Render page with error handling
         try {
@@ -311,15 +305,8 @@ class TabManager {
      * Get page class name from tab ID
      */
     getPageClassName(tabId) {
-        const mapping = {
-            'monthly-yearly': 'MonthlyYearlyPage',
-            'matching': 'MatchingPage',
-            'pricing': 'PricingPage',
-            'seasons': 'SeasonsPage',
-            'cashbox': 'CashBoxPage',
-            'booking-nazeel-compare': 'BookingNazeelComparePage'
-        };
-        return mapping[tabId] || `${tabId.charAt(0).toUpperCase() + tabId.slice(1)}Page`;
+        if (tabId === 'booking-nazeel-compare') return 'BookingNazeelComparePage';
+        return `${tabId.charAt(0).toUpperCase() + tabId.slice(1)}Page`;
     }
 
     /**

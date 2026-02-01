@@ -30,15 +30,17 @@ try {
     });
 } catch (e) { console.warn('Persistence error:', e); }
 
-// Try Silent/Anonymous Auth to satisfy security rules
+// Try Silent/Anonymous Auth only if legacy Firebase SDK is loaded (firebase.auth exists)
 try {
-    firebase.auth().onAuthStateChanged((user) => {
-        if (!user) {
-            firebase.auth().signInAnonymously().catch((error) => {
-                console.warn("Anonymous auth failed:", error);
-            });
-        }
-    });
+    if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                firebase.auth().signInAnonymously().catch((error) => {
+                    console.warn("Anonymous auth failed:", error);
+                });
+            }
+        });
+    }
 } catch (e) { console.warn('Auth init error:', e); }
 
 // Initialize Tab Manager
