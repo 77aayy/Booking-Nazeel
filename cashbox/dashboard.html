@@ -1,240 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="نظام إدارة الصندوق المالي المتكامل - CashBox Secure">
-    <meta name="theme-color" content="#022A3A">
-    <title>CashBox Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="dashboard.v2.css">
-    <link rel="stylesheet" href="print.css">
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Main Content -->
-        <main class="main-content" style="width: 100%; margin: 0; padding: 20px;">
-            <!-- Topbar -->
-            <div class="topbar">
-                <h2 style="margin:0; color:var(--primary);">نظام تقفيل الصندوق</h2>
-                <div class="user-area">
-                    <div class="online-dot"></div>
-                    <span class="username-text" id="username">موظف</span>
-                </div>
-            </div>
-
-            <!-- Metrics -->
-            <div class="dashboard-metrics">
-                <div class="metric-card">
-                    <h4>💰 إجمالي الإيراد</h4>
-                    <p id="metricTotalRevenue">0</p>
-                </div>
-                <div class="metric-card">
-                    <h4>💵 إجمالي الكاش</h4>
-                    <p id="metricTotalCash">0</p>
-                </div>
-                <div class="metric-card">
-                    <h4>💳 إجمالي الشبكة</h4>
-                    <p id="metricTotalNet">0</p>
-                </div>
-                <div class="metric-card">
-                    <h4>⚖️ إجمالي الانحراف</h4>
-                    <p id="metricTotalVariance">0</p>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="table-wrapper">
-                <div class="table-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <h3 style="color:var(--primary); margin:0;">جدول التقفيلات</h3>
-                        <button class="btn-add-row" onclick="addNewRowIfAllowed()" title="إضافة صف جديد" id="addRowBtn">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <button class="btn-delete-all" onclick="confirmDeleteAllRows()" title="حذف جميع الصفوف">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button class="btn-big" onclick="printData('last')" id="printLastBtn">
-                            <i class="fas fa-print"></i> طباعة آخر تقفيلة
-                        </button>
-                        <button class="btn-big" onclick="printData('all')" id="printAllBtn">
-                            <i class="fas fa-file-pdf"></i> طباعة الكل
-                        </button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>م</th>
-                            <th>الاحتياطي</th>
-                            <th>مصروف رسمي</th>
-                            <th>الموظف</th>
-                            <th>الوقت</th>
-                            <th>كاش</th>
-                            <th>شبكة</th>
-                            <th>تحويل</th>
-                            <th>إيراد البرنامج</th>
-                            <th>الانحراف</th>
-                            <th>ملاحظات</th>
-                            <th>الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mainTableBody"></tbody>
-                </table>
-                <!-- Pagination -->
-                <div class="pagination-container" id="tablePagination" style="display:none;">
-                    <!-- سيتم إضافة أزرار الصفحات هنا ديناميكياً -->
-                </div>
-            </div>
-
-            <!-- Close Button -->
-            <div class="close-wrapper">
-                <button class="btn-close" id="closeFundBtn">
-                    <span>🔒 إغلاق الصندوق</span>
-                </button>
-            </div>
-
-            <!-- Tools -->
-            <div class="tools-wrapper">
-                <!-- Notes -->
-                <div class="tool-card">
-                    <h3>📝 الملاحظات</h3>
-                    <textarea id="notesBox" placeholder="اكتب ملاحظات التقفيلة هنا..."></textarea>
-                </div>
-
-                <!-- Calculator -->
-                <div class="tool-card">
-                    <h3>🔢 الآلة الحاسبة</h3>
-                    <div id="calcExpression" style="text-align:right; color:#888; font-size:0.9rem; margin-bottom:5px; min-height:20px;"></div>
-                    <input type="text" id="calcDisplay" class="calc-display" 
-                           onkeydown="handleCalcDisplayKeyDown(event)" 
-                           oninput="handleCalcDisplayInput(event)"
-                           onfocus="handleCalcDisplayFocusIn(event)"
-                           value="0" readonly>
-                    <div class="calc-grid">
-                        <button data-key="clear">C</button>
-                        <button data-key="backspace">⌫</button>
-                        <button data-key="%">%</button>
-                        <button data-key="/">÷</button>
-                        <button data-key="7">7</button>
-                        <button data-key="8">8</button>
-                        <button data-key="9">9</button>
-                        <button data-key="*">×</button>
-                        <button data-key="4">4</button>
-                        <button data-key="5">5</button>
-                        <button data-key="6">6</button>
-                        <button data-key="-">-</button>
-                        <button data-key="1">1</button>
-                        <button data-key="2">2</button>
-                        <button data-key="3">3</button>
-                        <button data-key="+" class="eq-btn">+</button>
-                        <button data-key="0">0</button>
-                        <button data-key=".">.</button>
-                        <button data-key="=" class="eq-btn">=</button>
-                    </div>
-                    <div id="calcHistory" class="calc-history"></div>
-                </div>
-
-                <!-- Cash Calculator -->
-                <div class="tool-card">
-                    <h3>💵 حاسبة الكاش</h3>
-                    <div class="cash-table-container">
-                        <table id="cashCalcTable">
-                            <thead>
-                                <tr>
-                                    <th>العدد</th>
-                                    <th>الفئة</th>
-                                    <th>الإجمالي</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td contenteditable="true" data-denom="500" oninput="handleCashCalcInput(event)"></td>
-                                    <td>500</td>
-                                    <td data-total>0</td>
-                                </tr>
-                                <tr>
-                                    <td contenteditable="true" data-denom="200" oninput="handleCashCalcInput(event)"></td>
-                                    <td>200</td>
-                                    <td data-total>0</td>
-                                </tr>
-                                <tr>
-                                    <td contenteditable="true" data-denom="100" oninput="handleCashCalcInput(event)"></td>
-                                    <td>100</td>
-                                    <td data-total>0</td>
-                                </tr>
-                                <tr>
-                                    <td contenteditable="true" data-denom="50" oninput="handleCashCalcInput(event)"></td>
-                                    <td>50</td>
-                                    <td data-total>0</td>
-                                </tr>
-                                <tr>
-                                    <td contenteditable="true" data-denom="10" oninput="handleCashCalcInput(event)"></td>
-                                    <td>10</td>
-                                    <td data-total>0</td>
-                                </tr>
-                                <tr>
-                                    <td contenteditable="true" data-denom="5" oninput="handleCashCalcInput(event)"></td>
-                                    <td>5</td>
-                                    <td data-total>0</td>
-                                </tr>
-                                <tr>
-                                    <td contenteditable="true" data-denom="1" oninput="handleCashCalcInput(event)"></td>
-                                    <td>1</td>
-                                    <td data-total>0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="text-align:center; margin-top:auto; padding-top:10px;">
-                        <div style="font-size:1.2rem; font-weight:bold; color:var(--primary); margin-bottom:10px;">
-                            المجموع: <span id="cashCalcTotal">0</span>
-                        </div>
-                        <div style="display:flex; gap:8px; justify-content:center;">
-                            <button class="cash-btn btn-apply" onclick="applyCashTotalToRow()">⬇️ ترحيل للكاش</button>
-                            <button class="cash-btn btn-clear" onclick="handleClearCashCalc()">🗑️ مسح</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" class="modal-overlay">
-        <div class="confirm-modal">
-            <div class="confirm-modal-icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3>تأكيد الحذف</h3>
-            <p>هل أنت متأكد من حذف جميع صفوف التقفيلات؟<br>هذه العملية لا يمكن التراجع عنها.</p>
-            <div class="modal-btns">
-                <button class="btn-modal btn-confirm-delete" onclick="deleteAllRows()">
-                    <i class="fas fa-check"></i> نعم، احذف الكل
-                </button>
-                <button class="btn-modal btn-cancel-modal" onclick="closeDeleteModal()">
-                    <i class="fas fa-times"></i> إلغاء
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="config.js"></script>
-    <script src="utils.js"></script>
-    <script src="tableManager.js"></script>
-    <script src="calculators.js"></script>
-    <script src="closure.js"></script>
-    <script src="printing.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
-
