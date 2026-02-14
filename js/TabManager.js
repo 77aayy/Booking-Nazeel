@@ -105,17 +105,7 @@ class TabManager {
      * Save tabs to Firebase
      */
     async saveTabs() {
-        try {
-            const db = firebase.firestore();
-            const batch = db.batch();
-            this.tabs.forEach(tab => {
-                const ref = db.collection('management_tabs').doc(tab.id);
-                batch.set(ref, tab);
-            });
-            await batch.commit();
-        } catch (error) {
-            // Error saving tabs - silent fail
-        }
+        // Local-First Mode — no Firebase saving needed
     }
 
     /**

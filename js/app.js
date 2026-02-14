@@ -4,44 +4,20 @@
  * Initialize application
  */
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyD1rY9BUciB0ir1b8begsPozpJzgwnR-Z0",
-    authDomain: "adora-staff5255.firebaseapp.com",
-    projectId: "adora-staff5255",
-    storageBucket: "adora-staff5255.firebasestorage.app",
-    messagingSenderId: "96309381730",
-    appId: "1:96309381730:web:d24e0d275255347e43df3b"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Enable offline persistence
-try {
-    firebase.firestore().enablePersistence().catch(err => {
-        if (err.code == 'failed-precondition') {
-            // Multiple tabs open, persistence can only be enabled in one tab at a a time.
-            console.warn('Persistence failed: Multiple tabs open');
-        } else if (err.code == 'unimplemented') {
-            // The current browser does not support all of the features required to enable persistence
-            console.warn('Persistence not supported');
-        }
-    });
-} catch (e) { console.warn('Persistence error:', e); }
-
-// Try Silent/Anonymous Auth only if legacy Firebase SDK is loaded (firebase.auth exists)
-try {
-    if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-                firebase.auth().signInAnonymously().catch((error) => {
-                    console.warn("Anonymous auth failed:", error);
-                });
-            }
+// Firebase disabled — Local-First Mode (no server needed)
+// If firebase is loaded, initialize it; otherwise skip entirely
+if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+    try {
+        firebase.initializeApp({
+            apiKey: "AIzaSyD1rY9BUciB0ir1b8begsPozpJzgwnR-Z0",
+            authDomain: "adora-staff5255.firebaseapp.com",
+            projectId: "adora-staff5255",
+            storageBucket: "adora-staff5255.firebasestorage.app",
+            messagingSenderId: "96309381730",
+            appId: "1:96309381730:web:d24e0d275255347e43df3b"
         });
-    }
-} catch (e) { console.warn('Auth init error:', e); }
+    } catch (e) { /* already initialized or not available */ }
+}
 
 // Initialize Tab Manager
 let tabManager;

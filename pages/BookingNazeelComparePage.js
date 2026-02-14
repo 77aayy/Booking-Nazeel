@@ -276,7 +276,7 @@ class BookingNazeelComparePage {
 <body>
 
 <div class="booking-nazeel-page-wrapper">
-<div class="loader" id="loader">
+<div class="loader" id="loader" style="display:none">
     <i class="fas fa-gem fa-spin fa-3x" style="color:var(--bn-primary)" aria-hidden="true"></i>
     <div class="loader-progress-track">
         <div class="loader-progress-fill" id="loaderProgressFill"></div>
@@ -503,11 +503,32 @@ var PRICE_TOLERANCE_GUESS = 8;     // أوسع من 3 لتفادي مفقود ب
 var PRICE_TOLERANCE_EXT = 20;
 
 function normalize(s) {
-    return String(s||"").toLowerCase()
+    s = String(s||"");
+    if(s.includes(",")) s = s.split(",").map(function(p){return p.trim();}).reverse().join(" ");
+    return s.toLowerCase()
         .replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
         .replace(/al-/g, "").replace(/al /g, "").replace(/bin /g, "").replace(/abu /g, "")
         .replace(/mr /g, "").replace(/mrs /g, "")
         .replace(/[^\w\u0600-\u06FF]/g," ").replace(/\s+/g, " ").trim();
+}
+
+// V19.0: Gemini AI for cross-language/phonetic name matching
+var GEMINI_API_KEY = "AIzaSyD_XDLjvHhNCuIPSymraAytrJi2ktCL2Vo";
+async function callAI(guestName, candidatePool) {
+    try {
+        var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: 'IS GUEST "' + guestName + '" THE SAME PERSON AS ANY IN THIS LIST (PHONETIC/CROSS-LANGUAGE)? [' + candidatePool.join(',') + ']. JSON ONLY: {"match":true, "name":"ExactNameFromList"} or {"match":false}' }] }]
+            })
+        });
+        var d = await res.json();
+        var text = d.candidates[0].content.parts[0].text;
+        var jsonMatch = text.match(/\{.*\}/s);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+        return null;
+    } catch(e) { return null; }
 }
 // مرجع رقم الحجز: الموظف قد يغلط (رقم ناقص، زائد، حرف) — نسمح بتطابق يتضمن أو ليفنشتاين صغير
 function refMatch(bRef, nRef) {
@@ -1819,11 +1840,32 @@ async function applyManuals(s) {
         window.normalize = typeof memoizedNormalize !== 'undefined' 
             ? memoizedNormalize 
             : function(s) { 
-            return String(s||"").toLowerCase()
+            s = String(s||"");
+            if(s.includes(",")) s = s.split(",").map(function(p){return p.trim();}).reverse().join(" ");
+            return s.toLowerCase()
                 .replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
                 .replace(/al-/g, "").replace(/al /g, "").replace(/bin /g, "").replace(/abu /g, "")
                 .replace(/mr /g, "").replace(/mrs /g, "")
                 .replace(/[^\w\u0600-\u06FF]/g," ").replace(/\s+/g, " ").trim(); 
+        };
+
+        // V19.0: Gemini AI for cross-language/phonetic matching
+        window.GEMINI_API_KEY = "AIzaSyD_XDLjvHhNCuIPSymraAytrJi2ktCL2Vo";
+        window.callAI = async function(guestName, candidatePool) {
+            try {
+                var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + window.GEMINI_API_KEY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: 'IS GUEST "' + guestName + '" THE SAME PERSON AS ANY IN THIS LIST (PHONETIC/CROSS-LANGUAGE)? [' + candidatePool.join(',') + ']. JSON ONLY: {"match":true, "name":"ExactNameFromList"} or {"match":false}' }] }]
+                    })
+                });
+                var d = await res.json();
+                var text = d.candidates[0].content.parts[0].text;
+                var jsonMatch = text.match(/\{.*\}/s);
+                if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                return null;
+            } catch(e) { return null; }
         };
 
         window.parseDate = function(v) {
@@ -2092,6 +2134,15 @@ async function applyManuals(s) {
             const nightGuess = bPriceNet * 0.25;
             if (absDiff > nightGuess) return diff > 0 ? "تمديد ليلة محتمل" : "تخفيض سعر/خصم";
             return diff > 0 ? "زيادة غير مشخصة" : "نقصان غير مشخص";
+        };
+
+        window.setLoaderProgress = function(pct, label) {
+            var fill = document.getElementById('loaderProgressFill');
+            var lbl = document.getElementById('loaderLabel');
+            var pctEl = document.getElementById('loaderPct');
+            if (fill) fill.style.width = Math.min(100, Math.max(0, pct)) + '%';
+            if (lbl && label !== undefined) lbl.textContent = label;
+            if (pctEl) pctEl.textContent = Math.round(Math.min(100, Math.max(0, pct))) + '%';
         };
 
         // UI Event Listeners — تشغيل فوراً (بدون تأخير 100ms) حتى يكون startEngine جاهزاً عند رفع الملفين
@@ -2896,6 +2947,33 @@ async function applyManuals(s) {
                 }
             });
 
+            // ═══ Stage 5: AI Matching (Gemini) for remaining misses ═══
+            if (typeof window.callAI === 'function') {
+                let missRows = [];
+                window.allRowsData.forEach(function(r, i) { if (r.type === 'miss' && r.isOk) missRows.push({row: r, idx: i}); });
+                let remainingPool = nazeel.map(function(n, i) { return {n:n, i:i}; }).filter(function(x) { return !takenNazeel.has(x.i); });
+                for (let mc = 0; mc < missRows.length; mc++) {
+                    if (remainingPool.length === 0) break;
+                    let mr = missRows[mc];
+                    if (window.setLoaderProgress) window.setLoaderProgress(82 + Math.round((mc/missRows.length)*13), '\u062A\u062D\u0644\u064A\u0644 AI: ' + (mr.row.bName||''));
+                    let pool = remainingPool.slice(0, 30).map(function(x) { return String(x.n["\u0625\u0633\u0645 \u0627\u0644\u0639\u0645\u064A\u0644"]||""); }).filter(Boolean);
+                    if (pool.length === 0) break;
+                    let aiRes = await window.callAI(mr.row.bName, pool);
+                    if (aiRes && aiRes.match && aiRes.name) {
+                        let mIdx = remainingPool.findIndex(function(x) { return String(x.n["\u0625\u0633\u0645 \u0627\u0644\u0639\u0645\u064A\u0644"]||"") === aiRes.name; });
+                        if (mIdx !== -1) {
+                            let matched = remainingPool[mIdx];
+                            takenNazeel.add(matched.i);
+                            remainingPool.splice(mIdx, 1);
+                            mr.row.type = 'ai'; mr.row.n = matched.n;
+                            mr.row.nPrice = window.cleanPrice(matched.n["\u0627\u0644\u0627\u064A\u062C\u0627\u0631 \u0627\u0644\u0643\u0644\u064A"]||matched.n["\u0627\u0644\u0627\u062C\u0645\u0627\u0644\u064A"]);
+                            s.miss--; s.match++;
+                            s.revB += mr.row.bPrice; s.revN += mr.row.nPrice;
+                        }
+                    }
+                }
+            }
+
             await window.applyManuals(s);
             window.updateStats(s, sub);
             window.renderTable();
@@ -3005,6 +3083,7 @@ async function applyManuals(s) {
                 if(row.type==="ref") tag=`<span class="match-tag mt-ok">🆔 مرجع</span>`;
                 else if(row.type==="name") tag=`<span class="match-tag mt-ok">✨ اسم</span>`;
                 else if(row.type==="reversed") tag=`<span class="match-tag mt-ok" title="عكس الاسم (أول↔ثاني)">✨ اسم (عكس)</span>`;
+                else if(row.type==="ai") tag=`<span class="match-tag mt-ok" style="background:#e8eaf6;color:#5c6bc0;border:1px solid #9fa8da;">🤖 AI</span>`;
                 else if(row.type==="alias") tag=`<span class="match-tag mt-alias">🧠 ذاكرة</span>`;
                 else if(row.type==="money") tag=`<span class="match-tag mt-warn">💰 بصمة</span>`;
                 else if(row.type==="guess") tag=`<span class="match-tag mt-guess">🧩 تخمين ذكي</span>`;
