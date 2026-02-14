@@ -1,3 +1,8 @@
+/* UI/UX Rules: Standard Turquoise #14b8a6 for branding/highlights */
+:root {
+    --primary-turquoise: #14b8a6;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -44,7 +49,7 @@ body {
 #global-loader .spinner {
     font-size: 48px;
     animation: spin 1s linear infinite;
-    color: #2CB1E1;
+    color: var(--primary-turquoise, #14b8a6);
 }
 
 @keyframes spin {
@@ -60,7 +65,7 @@ body {
 #global-loader-text {
     font-weight: 700;
     font-size: 18px;
-    color: #2CB1E1;
+    color: var(--primary-turquoise, #14b8a6);
     text-align: center;
     padding: 0 20px;
 }
@@ -76,7 +81,7 @@ body {
 
 #global-loader .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2CB1E1, #5EC5E8);
+    background: linear-gradient(90deg, var(--primary-turquoise, #14b8a6), #5eead4);
     width: 0%;
     transition: width 0.3s ease;
     animation: progress 2s ease-in-out infinite;

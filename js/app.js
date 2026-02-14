@@ -1,23 +1,8 @@
 /**
  * app.js
- * 
- * Initialize application
+ *
+ * Initialize application — Local storage only (no Firebase)
  */
-
-// Firebase disabled — Local-First Mode (no server needed)
-// If firebase is loaded, initialize it; otherwise skip entirely
-if (typeof firebase !== 'undefined' && firebase.initializeApp) {
-    try {
-        firebase.initializeApp({
-            apiKey: "AIzaSyD1rY9BUciB0ir1b8begsPozpJzgwnR-Z0",
-            authDomain: "adora-staff5255.firebaseapp.com",
-            projectId: "adora-staff5255",
-            storageBucket: "adora-staff5255.firebasestorage.app",
-            messagingSenderId: "96309381730",
-            appId: "1:96309381730:web:d24e0d275255347e43df3b"
-        });
-    } catch (e) { /* already initialized or not available */ }
-}
 
 // Initialize Tab Manager
 let tabManager;
@@ -32,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.innerHTML = `<div style="padding: 20px; color: red; text-align: center;">
                 <h1>⚠️ خطأ في النظام</h1>
                 <p>حدث خطأ أثناء تحميل النظام. يرجى تحديث الصفحة.</p>
-                <p style="color: #666; font-size: 0.8em;">${err.message}</p>
+                <p style="color: #666; font-size: 0.8em;">${typeof sanitizeText === 'function' ? sanitizeText(err.message) : (err.message || '').replace(/[<>"&]/g, '')}</p>
                 <button onclick="localStorage.clear(); window.location.reload();" style="padding: 10px 20px; background: #022A3A; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">مسح الذاكرة المؤقتة وإعادة المحاولة</button>
             </div>`;
         });
@@ -47,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fallback UI
         document.body.innerHTML = `<div style="padding: 20px; color: red; text-align: center;">
             <h1>⚠️ خطأ غير متوقع</h1>
-            <p>${e.message}</p>
+            <p>${typeof sanitizeText === 'function' ? sanitizeText(e.message) : (e.message || '').replace(/[<>"&]/g, '')}</p>
             <button onclick="localStorage.clear(); window.location.reload();" style="padding: 10px 20px; background: #022A3A; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">إصلاح المشكلة</button>
         </div>`;
     }

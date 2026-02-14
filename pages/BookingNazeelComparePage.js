@@ -13,16 +13,17 @@ class BookingNazeelComparePage {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- XLSX يُحمّل من index.html -->
 
 <style>
     /* V18.0 Priority Fix Style - Scoped to page wrapper only */
     .booking-nazeel-page-wrapper {
-        --bn-primary: #2CB1E1; --bn-primary-soft: rgba(44, 177, 225, 0.1); --bn-accent: #FFD700;        
+        /* UI/UX Rules: Standard Turquoise #14b8a6 */
+        --bn-primary: #14b8a6; --bn-primary-soft: rgba(20, 184, 166, 0.1); --bn-accent: #FFD700;        
         --bn-bg-body: #022A3A; --bn-text-dark: #FFFFFF; --bn-text-light: rgba(255, 255, 255, 0.6);
         --bn-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.2);
         --bn-radius: 16px;
-        --bn-grad-blue: linear-gradient(135deg, #2CB1E1, #166882);
+        --bn-grad-blue: linear-gradient(135deg, #14b8a6, #0d9488);
         --bn-grad-ok: linear-gradient(135deg, #10b981, #059669);
         --bn-grad-warn: linear-gradient(135deg, #f59e0b, #d97706);
         --bn-grad-err: linear-gradient(135deg, #ef4444, #dc2626);
@@ -44,7 +45,7 @@ class BookingNazeelComparePage {
         display: flex; justify-content: space-between; align-items: center;
     }
     .booking-nazeel-page-wrapper .brand { display: flex; align-items: center; gap: 12px; }
-    .booking-nazeel-page-wrapper .brand-info h1 { margin: 0; font-size: 1.3rem; font-weight: 800; color: #2CB1E1; }
+    .booking-nazeel-page-wrapper .brand-info h1 { margin: 0; font-size: 1.3rem; font-weight: 800; color: var(--bn-primary); }
     .booking-nazeel-page-wrapper .brand-info p { margin: 0; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
     .booking-nazeel-page-wrapper .header-tools { display: flex; gap: 10px; }
     /* إخفاء طباعة واكسيل في صفحة الرفع؛ تظهران فقط بعد ظهور النتائج */
@@ -58,10 +59,10 @@ class BookingNazeelComparePage {
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .booking-nazeel-page-wrapper .btn-chic:hover { 
-        border-color: #2CB1E1; 
+        border-color: var(--bn-primary); 
         background: rgba(2, 42, 58, 1);
         transform: translateY(-2px); 
-        box-shadow: 0 4px 12px rgba(44, 177, 225, 0.3);
+        box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
     }
     .booking-nazeel-page-wrapper .hero-card { margin: 30px auto; max-width: 800px; padding: 0 20px; animation: slideIn 0.5s ease-out; }
     .booking-nazeel-page-wrapper .upload-box {
@@ -70,7 +71,7 @@ class BookingNazeelComparePage {
     }
     .booking-nazeel-page-wrapper .upload-box::before {
         content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-        background: linear-gradient(90deg, #2CB1E1, #FFD700);
+        background: linear-gradient(90deg, var(--bn-primary), #FFD700);
         border-radius: 16px 16px 0 0;
     }
     .booking-nazeel-page-wrapper .drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
@@ -78,9 +79,9 @@ class BookingNazeelComparePage {
         border: 2px dashed rgba(100, 200, 255, 0.3); border-radius: 15px; padding: 25px;
         transition: 0.3s; cursor: pointer; background: rgba(2, 42, 58, 0.4);
     }
-    .booking-nazeel-page-wrapper .drop-zone:hover { border-color: #2CB1E1; background: rgba(2, 42, 58, 0.6); }
+    .booking-nazeel-page-wrapper .drop-zone:hover { border-color: var(--bn-primary); background: rgba(2, 42, 58, 0.6); }
     .booking-nazeel-page-wrapper .drop-zone.file-loaded { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
-    .booking-nazeel-page-wrapper .drop-zone i { font-size: 2rem; color: #2CB1E1; }
+    .booking-nazeel-page-wrapper .drop-zone i { font-size: 2rem; color: var(--bn-primary); }
     .booking-nazeel-page-wrapper .drop-zone h3 { margin: 10px 0 0; font-size: 0.9rem; color: #FFFFFF; font-weight: 700; }
     .booking-nazeel-page-wrapper .drop-zone input { display: none; }
     .booking-nazeel-page-wrapper .upload-progress {
@@ -89,28 +90,28 @@ class BookingNazeelComparePage {
         left: 0;
         width: 0%;
         height: 4px;
-        background: linear-gradient(90deg, #2CB1E1, #10b981);
+        background: linear-gradient(90deg, var(--bn-primary), #10b981);
         border-radius: 0 0 12px 12px;
         transition: width 0.1s linear;
-        box-shadow: 0 0 10px rgba(44, 177, 225, 0.5);
+        box-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
     }
     .booking-nazeel-page-wrapper .drop-zone {
         position: relative;
         overflow: hidden;
     }
     .booking-nazeel-page-wrapper .btn-magic {
-        background: linear-gradient(135deg, #2CB1E1, #166882); color: #fff; border: none;
+        background: linear-gradient(135deg, var(--bn-primary), #0d9488); color: #fff; border: none;
         padding: 14px 40px; border-radius: 50px; font-size: 1rem; font-weight: 800;
-        cursor: pointer; box-shadow: 0 8px 20px rgba(44, 177, 225, 0.3); transition: 0.3s;
+        cursor: pointer; box-shadow: 0 8px 20px rgba(20, 184, 166, 0.3); transition: 0.3s;
         display: inline-flex; align-items: center; gap: 8px;
     }
-    .booking-nazeel-page-wrapper .btn-magic:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(44, 177, 225, 0.4); }
+    .booking-nazeel-page-wrapper .btn-magic:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(20, 184, 166, 0.4); }
     .booking-nazeel-page-wrapper .control-panel { display: none; justify-content: center; gap: 15px; margin: 0 auto 20px; }
     .booking-nazeel-page-wrapper .tax-settings {
         display: flex; align-items: center; flex-wrap: wrap; gap: 15px; background: rgba(2, 42, 58, 0.7); padding: 10px 18px; 
         border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(100, 200, 255, 0.2);
     }
-    .booking-nazeel-page-wrapper .tax-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: #2CB1E1; }
+    .booking-nazeel-page-wrapper .tax-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--bn-primary); }
     .booking-nazeel-page-wrapper .tax-inp {
         width: 52px; min-height: 36px; text-align: center; font-size: 0.95rem; font-weight: 700;
         border: 1px solid rgba(100, 200, 255, 0.35); border-radius: 8px; padding: 6px 8px;
@@ -119,10 +120,10 @@ class BookingNazeelComparePage {
     }
     .booking-nazeel-page-wrapper .tax-inp::-webkit-outer-spin-button,
     .booking-nazeel-page-wrapper .tax-inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .booking-nazeel-page-wrapper .tax-inp:focus { outline: none; border-color: rgba(44, 177, 225, 0.7); background: rgba(255, 255, 255, 0.12); }
+    .booking-nazeel-page-wrapper .tax-inp:focus { outline: none; border-color: rgba(20, 184, 166, 0.7); background: rgba(255, 255, 255, 0.12); }
     .booking-nazeel-page-wrapper .tax-inp::placeholder { color: rgba(255, 215, 0, 0.5); }
-    .booking-nazeel-page-wrapper .btn-recalc { margin-right: 12px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; color: #fff; background: rgba(44, 177, 225, 0.4); border: 1px solid rgba(100, 200, 255, 0.3); border-radius: 8px; cursor: pointer; }
-    .booking-nazeel-page-wrapper .btn-recalc:hover { background: rgba(44, 177, 225, 0.6); }
+    .booking-nazeel-page-wrapper .btn-recalc { margin-right: 12px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; color: #fff; background: rgba(20, 184, 166, 0.4); border: 1px solid rgba(100, 200, 255, 0.3); border-radius: 8px; cursor: pointer; }
+    .booking-nazeel-page-wrapper .btn-recalc:hover { background: rgba(20, 184, 166, 0.6); }
     .booking-nazeel-page-wrapper .dashboard {
         display: none; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 12px; padding: 0 25px; max-width: 1250px; margin: 0 auto 20px;
@@ -133,7 +134,7 @@ class BookingNazeelComparePage {
         box-shadow: var(--bn-shadow-card); text-align: center; position: relative;
         transition: 0.3s;
     }
-    .booking-nazeel-page-wrapper .kpi-card:hover { transform: translateY(-3px); border-color: rgba(44, 177, 225, 0.3); }
+    .booking-nazeel-page-wrapper .kpi-card:hover { transform: translateY(-3px); border-color: rgba(20, 184, 166, 0.3); }
     .booking-nazeel-page-wrapper .kpi-icon {
         width: 32px; height: 32px; border-radius: 10px; margin: 0 auto 5px;
         display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem;
@@ -158,7 +159,7 @@ class BookingNazeelComparePage {
         white-space: nowrap; padding: 8px 18px; border-radius: 20px; background: rgba(2, 42, 58, 0.7); border: 2px solid rgba(100, 200, 255, 0.2);
         font-weight: 700; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); cursor: pointer; transition: 0.2s;
     }
-    .booking-nazeel-page-wrapper .pill.active { background: rgba(2, 42, 58, 0.95); color: #2CB1E1; border-color: #2CB1E1; box-shadow: 0 0 0 2px rgba(44, 177, 225, 0.2); }
+    .booking-nazeel-page-wrapper .pill.active { background: rgba(2, 42, 58, 0.95); color: var(--bn-primary); border-color: var(--bn-primary); box-shadow: 0 0 0 2px var(--bn-primary-soft); }
     .booking-nazeel-page-wrapper .pill.red.active { background: rgba(220, 38, 38, 0.3); border-color: #dc2626; color: #dc2626; }
     .booking-nazeel-page-wrapper .search-box {
         width: 100%; padding: 12px 20px; border-radius: 12px; border: 2px solid rgba(100, 200, 255, 0.2);
@@ -166,20 +167,20 @@ class BookingNazeelComparePage {
         font-weight: 600;
     }
     .booking-nazeel-page-wrapper .search-box:focus {
-        border-color: #2CB1E1;
+        border-color: var(--bn-primary);
         background: rgba(2, 42, 58, 1);
-        box-shadow: 0 0 0 3px rgba(44, 177, 225, 0.25);
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
         outline: none;
     }
     .booking-nazeel-page-wrapper .table-responsive { background: transparent; overflow-x: auto; overflow-y: visible; max-width: 100%; -webkit-overflow-scrolling: touch; }
     .booking-nazeel-page-wrapper table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 0; table-layout: fixed; }
     .booking-nazeel-page-wrapper thead th {
-        background: rgba(44, 177, 225, 0.1); color: #2CB1E1; padding: 8px 10px;
+        background: var(--bn-primary-soft); color: var(--bn-primary); padding: 8px 10px;
         text-align: right; font-weight: 800; font-size: 0.72rem; border: 1px solid rgba(100, 200, 255, 0.15);
         cursor: pointer; user-select: none; word-break: break-word; overflow-wrap: break-word;
     }
     .booking-nazeel-page-wrapper tbody tr { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(100, 200, 255, 0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; }
-    .booking-nazeel-page-wrapper tbody tr:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(44, 177, 225, 0.2); border-color: rgba(44, 177, 225, 0.3); }
+    .booking-nazeel-page-wrapper tbody tr:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(20, 184, 166, 0.2); border-color: rgba(20, 184, 166, 0.3); }
     .booking-nazeel-page-wrapper tbody td {
         padding: 10px 12px; border-top: 1px solid rgba(100, 200, 255, 0.1); border-bottom: 1px solid rgba(100, 200, 255, 0.1);
         font-size: 0.82rem; vertical-align: middle; color: rgba(255, 255, 255, 0.9); word-break: break-word; overflow-wrap: break-word;
@@ -199,7 +200,7 @@ class BookingNazeelComparePage {
     .booking-nazeel-page-wrapper .mt-miss { background: #eceff1; color: #78909c; }
     .booking-nazeel-page-wrapper .mt-alias { background: #e3f2fd; color: #1565c0; border:1px solid #90caf9; }
     .booking-nazeel-page-wrapper .mt-ext { background: #fffde7; color: #fbc02d; border:1px solid #ffee58; }
-    .booking-nazeel-page-wrapper .b-name { font-weight: 800; color: #2CB1E1; font-size: 0.82rem; word-break: break-word; overflow-wrap: break-word; }
+    .booking-nazeel-page-wrapper .b-name { font-weight: 800; color: var(--bn-primary); font-size: 0.82rem; word-break: break-word; overflow-wrap: break-word; }
     .booking-nazeel-page-wrapper .b-ref { font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); }
     .booking-nazeel-page-wrapper .guest-badge { font-size: 0.7rem; color: rgba(255,255,255,0.7); font-weight: 500; }
     .booking-nazeel-page-wrapper .suggested-hint { font-size: 0.72rem; color: #f59e0b; font-weight: 600; margin-top: 4px; }
@@ -513,8 +514,11 @@ function normalize(s) {
 }
 
 // V19.0: Gemini AI for cross-language/phonetic name matching
-var GEMINI_API_KEY = "AIzaSyD_XDLjvHhNCuIPSymraAytrJi2ktCL2Vo";
+// SECURITY: Never hardcode API keys. Use backend proxy or Firebase Cloud Functions.
+// Set window.GEMINI_API_KEY at runtime (e.g. from env) — or callAI returns null.
+var GEMINI_API_KEY = (typeof window !== 'undefined' && window.GEMINI_API_KEY) ? window.GEMINI_API_KEY : '';
 async function callAI(guestName, candidatePool) {
+    if (!GEMINI_API_KEY) return null;
     try {
         var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY, {
             method: 'POST',
@@ -975,10 +979,13 @@ function normalizeBookingByRef(booking) {
 async function process(booking, nazeel, tax) {
     allRowsData = [];
     if (typeof window !== 'undefined') window.allRowsData = allRowsData;
+    if (!nazeel || !Array.isArray(nazeel) || nazeel.length === 0) return;
+    if (!booking || !Array.isArray(booking) || booking.length === 0) return;
+
     let s = { book:0, match:0, money:0, recover:0, group:0, miss:0, revB:0, revN:0 };
     let sub = { ok:0, can:0, nos:0 };
     let takenNazeel = new Set();
-    let processedBooking = new Set(); 
+    let processedBooking = new Set();
 
     // عمود مرجع/رقم الحجز في نزيل: أولوية مرجع/مصدر ثم رقم الحجز ثم id (للمطابقة المباشرة عند توفر نفس الـ ID)
     const nazeelKeys = Object.keys(nazeel[0]||{});
@@ -1547,18 +1554,21 @@ function runDiagnosticReport() {
     var el = document.getElementById('diagnosticReport');
     if (!el) return;
     var rows = (typeof window !== 'undefined' && window.allRowsData) ? window.allRowsData : (typeof allRowsData !== 'undefined' ? allRowsData : []);
+    if (!Array.isArray(rows)) rows = [];
+    var nazeel = (typeof window !== 'undefined' && window.cachedN) ? window.cachedN : [];
+    if (!Array.isArray(nazeel)) nazeel = [];
     var misses = rows.filter(function(r) { return r.type === 'miss'; });
     var reversedRows = rows.filter(function(r) { return r.type === 'reversed'; });
-    var nazeel = (typeof window !== 'undefined' && window.cachedN) ? window.cachedN : [];
     var bName = '', bParts = [], nParts = [], reason = '', nPrice = 0, nDate = null, priceDiff = 0, dateDiff = null;
-    var html = '<h3 style="margin:0 0 12px; color:#2CB1E1;">تقرير تشخيص — من الملفات الفعلية</h3>';
+    var safe = typeof sanitizeText === 'function' ? sanitizeText : function(t){ return (t==null||t===undefined)?'':String(t).replace(/[<>"&]/g,''); };
+    var html = '<h3 style="margin:0 0 12px; color:var(--bn-primary);">تقرير تشخيص — من الملفات الفعلية</h3>';
     if (reversedRows.length > 0) {
-        html += '<div style="margin-bottom:16px; padding:10px; background:rgba(44,177,225,0.12); border-radius:8px;"><strong>حالات مرنة (عكس الاسم — أول↔ثاني):</strong> ' + reversedRows.length + ' — بوكينج↔نزيل (مثل مشبب البراء↔البراء مشبب، Zaher ALASIRI↔ALASIRI Zaher)</div><ul style="margin:0 0 12px 20px; padding:0;">';
+        html += '<div style="margin-bottom:16px; padding:10px; background:var(--bn-primary-soft); border-radius:8px;"><strong>حالات مرنة (عكس الاسم — أول↔ثاني):</strong> ' + reversedRows.length + ' — بوكينج↔نزيل (مثل مشبب البراء↔البراء مشبب، Zaher ALASIRI↔ALASIRI Zaher)</div><ul style="margin:0 0 12px 20px; padding:0;">';
         for (var r = 0; r < reversedRows.length; r++) {
             var rr = reversedRows[r];
             var bn = rr.bName || (rr.b && (rr.b["اسم الضيف\\الضيوف"] || rr.b["اسم الضيف"] || ""));
             var nn = rr.n && (rr.n["إسم العميل"] || "");
-            html += '<li style="margin:4px 0;">' + (bn || '-') + ' ↔ ' + (nn || '-') + '</li>';
+            html += '<li style="margin:4px 0;">' + safe(bn || '-') + ' ↔ ' + safe(nn || '-') + '</li>';
         }
         html += '</ul>';
     }
@@ -1569,7 +1579,7 @@ function runDiagnosticReport() {
         bParts = getParts(normalize(bName));
         var bPrice = row.bPrice != null ? row.bPrice : (row.b && cleanPrice(row.b["السعر"]));
         var bDate = row.timestamp || (row.b && parseDate(row.b["تسجيل الوصول"]));
-        html += '<div class="diag-miss" style="margin-bottom:14px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"><strong>لم يحضر:</strong> ' + (bName || '-') + ' — بوكينج: ' + (bPrice != null ? Number(bPrice).toFixed(0) : '-') + ' ر.س، تاريخ: ' + (bDate ? bDate.toLocaleDateString('ar-EG') : '-') + '</div>';
+        html += '<div class="diag-miss" style="margin-bottom:14px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"><strong>لم يحضر:</strong> ' + safe(bName || '-') + ' — بوكينج: ' + (bPrice != null ? Number(bPrice).toFixed(0) : '-') + ' ر.س، تاريخ: ' + (bDate ? bDate.toLocaleDateString('ar-EG') : '-') + '</div>';
         var candidates = [];
         for (var i = 0; i < nazeel.length; i++) {
             var n = nazeel[i];
@@ -1586,7 +1596,7 @@ function runDiagnosticReport() {
         html += '<ul style="margin:0 0 0 20px; padding:0;">';
         for (var c = 0; c < candidates.length; c++) {
             var x = candidates[c];
-            html += '<li style="margin:4px 0;">' + (x.nName || '-') + ' — سعر ' + Number(x.nPrice).toFixed(0) + '، فرق السعر ' + (x.priceDiff >= 0 ? '+' : '') + x.priceDiff.toFixed(0) + (x.dateDiff != null ? '، فرق الأيام ' + (x.dateDiff >= 0 ? '+' : '') + x.dateDiff : '') + ' — <span style="color:#FFD700;">' + x.reason + '</span></li>';
+            html += '<li style="margin:4px 0;">' + safe(x.nName || '-') + ' — سعر ' + Number(x.nPrice).toFixed(0) + '، فرق السعر ' + (x.priceDiff >= 0 ? '+' : '') + x.priceDiff.toFixed(0) + (x.dateDiff != null ? '، فرق الأيام ' + (x.dateDiff >= 0 ? '+' : '') + x.dateDiff : '') + ' — <span style="color:#FFD700;">' + safe(x.reason) + '</span></li>';
         }
         html += '</ul>';
     }
@@ -1849,9 +1859,9 @@ async function applyManuals(s) {
                 .replace(/[^\w\u0600-\u06FF]/g," ").replace(/\s+/g, " ").trim(); 
         };
 
-        // V19.0: Gemini AI for cross-language/phonetic matching
-        window.GEMINI_API_KEY = "AIzaSyD_XDLjvHhNCuIPSymraAytrJi2ktCL2Vo";
+        // V19.0: Gemini AI — SECURITY: No hardcoded keys. Set window.GEMINI_API_KEY at runtime if needed.
         window.callAI = async function(guestName, candidatePool) {
+            if (!window.GEMINI_API_KEY) return null;
             try {
                 var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + window.GEMINI_API_KEY, {
                     method: 'POST',
@@ -2255,7 +2265,10 @@ async function applyManuals(s) {
                     '</table>' +
                     '<p style="font-size:8pt; margin-top:8px;">الهدف: التحقق من الحضور قبل دفع عمولة بوكينج. لم يحضر = لا عمولة.</p>';
             };
-            window.addEventListener('beforeprint', function() { window.buildPrintSummary(); });
+            if (!window._printSummaryBound) {
+                window.addEventListener('beforeprint', function() { if (window.buildPrintSummary) window.buildPrintSummary(); });
+                window._printSummaryBound = true;
+            }
 
             // تحميل ملفات المشروع تلقائياً عند ?loadSample=1 (للمراجعة والاختبار)
             if (typeof window.location !== 'undefined' && window.location.search && window.location.search.indexOf('loadSample=1') !== -1) {
@@ -2492,6 +2505,8 @@ async function applyManuals(s) {
             if (!Array.isArray(booking)) booking = [];
             if (!Array.isArray(nazeel)) nazeel = [];
             window.allRowsData = [];
+            if (nazeel.length === 0 || booking.length === 0) return;
+
             let s = { book:0, match:0, money:0, recover:0, group:0, miss:0, revB:0, revN:0 };
             let sub = { ok:0, can:0, nos:0 };
             let takenNazeel = new Set();
@@ -3095,7 +3110,7 @@ async function applyManuals(s) {
 
                 let suggestedHint = "";
                 if (row.type === "miss" && row.suggestedMatch && row.suggestedMatch.nName) {
-                    var sn = String(row.suggestedMatch.nName);
+                    var sn = (typeof sanitizeText === 'function' ? sanitizeText : function(t){ return String(t||'').replace(/[<>"&]/g,''); })(String(row.suggestedMatch.nName));
                     var sp = row.suggestedMatch.nPrice != null ? " — " + Number(row.suggestedMatch.nPrice).toFixed(0) + " ر.س" : "";
                     suggestedHint = "<div class=\"suggested-hint\" title=\"ربما نفس الضيف في نزيل بتهجئة قريبة — راجع يدوياً\">ربما مطابق: " + sn + sp + " — راجع يدوياً</div>";
                 }
@@ -3107,7 +3122,7 @@ async function applyManuals(s) {
                 let bOut = window.toENDateStr(window.parseDate(row.b["تاريخ المغادرة"]));
                 let nDate = row.n ? window.toENDateStr(window.parseDate(row.n["تاريخ الدخول"])) : "-";
                 let nOut = row.n ? window.toENDateStr(window.parseDate(row.n["تاريخ الخروج"])) : "-";
-                let mergeAttr = row.type==="miss" ? " data-b-name=\"" + String(row.bNameForMerge||row.bName).replace(/&/g,"&amp;").replace(/"/g,"&quot;") + "\"" : "";
+                let mergeAttr = row.type==="miss" ? " data-b-name=\"" + (typeof sanitizeText === 'function' ? sanitizeText(row.bNameForMerge||row.bName) : String(row.bNameForMerge||row.bName).replace(/&/g,"&amp;").replace(/"/g,"&quot;")) + "\"" : "";
                 let act = (row.type==="miss") ? suggestedHint + "<br><button class=\"btn-mini bm-merge\"" + mergeAttr + " onclick=\"markMerged(this, this.getAttribute('data-b-name'))\">دمج يدوي</button>" : "";
 
                 let diff = row.n ? (row.nPrice - row.bPrice) : 0;
@@ -3130,11 +3145,12 @@ async function applyManuals(s) {
                     nPriceCell = '<span class="price-val">' + row.bPrice.toFixed(0) + '</span> <span class="avail-in-group" title="المبلغ مضمن في مجموع نزيل أعلاه">متاح ضمن المجموع</span>';
                 }
 
+                var safeCell = typeof sanitizeText === 'function' ? sanitizeText : function(t){ return (t==null||t===undefined)?'':String(t).replace(/[<>"&]/g,''); };
                 tr.innerHTML = `
                     <td class="col-seq">${rowNumCell}</td>
-                    <td><div class="b-name">${row.bName}${guestBadge}</div><div class="b-ref">${row.b["رقم الحجز"]||""}</div></td>
+                    <td><div class="b-name">${safeCell(row.bName)}${guestBadge}</div><div class="b-ref">${safeCell(row.b["رقم الحجز"]||"")}</div></td>
                     <td>${stHtml}</td>
-                    <td>${row.n ? row.n["إسم العميل"] : "-"}</td>
+                    <td>${row.n ? safeCell(row.n["إسم العميل"]) : "-"}</td>
                     <td>${tag}${act}</td>
                     <td><span class="price-val">${row.bPrice.toFixed(0)}</span></td>
                     <td>${nPriceCell}</td>
@@ -3308,8 +3324,8 @@ async function applyManuals(s) {
                 if (existing) existing.remove();
                 var div = document.createElement('div');
                 div.id = 'match-test-results';
-                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#022A3A;color:#fff;padding:24px;border-radius:16px;z-index:99999;max-width:95%;max-height:90vh;overflow:auto;font-family:Tajawal;direction:rtl;text-align:right;border:2px solid #2CB1E1;';
-                div.innerHTML = '<h2 style="margin:0 0 16px;">🔬 اختبار منطق المطابقة (لم يحضر)</h2><pre style="margin:0;white-space:pre-wrap;font-size:0.9rem;">' + out.join('\n') + '</pre><p style="margin:12px 0 0;font-size:0.8rem;color:rgba(255,255,255,0.7);">يفترض أن الحالات 1–5 تُقبل والحالة 6 (Saws ↔ عبدالله سعد) مرفوضة.</p><button onclick="this.closest(\'#match-test-results\').remove()" style="margin-top:12px;padding:8px 16px;background:#2CB1E1;border:none;border-radius:8px;color:#fff;cursor:pointer;">إغلاق</button>';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#022A3A;color:#fff;padding:24px;border-radius:16px;z-index:99999;max-width:95%;max-height:90vh;overflow:auto;font-family:Tajawal;direction:rtl;text-align:right;border:2px solid #14b8a6;';
+                div.innerHTML = '<h2 style="margin:0 0 16px;">🔬 اختبار منطق المطابقة (لم يحضر)</h2><pre style="margin:0;white-space:pre-wrap;font-size:0.9rem;">' + out.join('\n') + '</pre><p style="margin:12px 0 0;font-size:0.8rem;color:rgba(255,255,255,0.7);">يفترض أن الحالات 1–5 تُقبل والحالة 6 (Saws ↔ عبدالله سعد) مرفوضة.</p><button onclick="this.closest(\'#match-test-results\').remove()" style="margin-top:12px;padding:8px 16px;background:#14b8a6;border:none;border-radius:8px;color:#fff;cursor:pointer;">إغلاق</button>';
                 document.body.appendChild(div);
             }, 1000);
         }

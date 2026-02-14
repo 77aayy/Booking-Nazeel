@@ -45,16 +45,9 @@ module.exports = {
         'no-use-before-define': ['warn', { functions: false }]
     },
     globals: {
-        'firebase': 'readonly',
         'XLSX': 'readonly',
-        'Chart': 'readonly',
         'TabManager': 'readonly',
-        'PricingPage': 'readonly',
-        'MatchingPage': 'readonly',
-        'BookingNazeelComparePage': 'readonly',
-        'CashBoxPage': 'readonly',
-        'SeasonsPage': 'readonly',
-        'MonthlyYearlyPage': 'readonly'
+        'BookingNazeelComparePage': 'readonly'
     }
 };
 

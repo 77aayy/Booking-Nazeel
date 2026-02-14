@@ -16,17 +16,14 @@ class TabManager {
      * Initialize Tab Manager
      */
     async init() {
-        // Load tabs from Firebase or use defaults
         await this.loadTabs();
         this.renderTabs();
 
-        // استعادة الصفحة الأخيرة من localStorage
+        // استعادة الصفحة الأخيرة من localStorage (تخزين محلي)
         let lastActiveTab = null;
         try {
             if (typeof getSecureStorage === 'function') {
                 lastActiveTab = getSecureStorage('lastActiveTab');
-            } else if (typeof getStorageItem === 'function') { // Fallback check
-                lastActiveTab = getStorageItem('lastActiveTab');
             } else {
                 lastActiveTab = localStorage.getItem('lastActiveTab');
             }
@@ -48,68 +45,47 @@ class TabManager {
     }
 
     /**
-     * Load tabs from Firebase
+     * Load tabs — تخزين محلي فقط (localStorage)
      */
     async loadTabs() {
-        // مشروع المقارنة فقط — تبويب واحد (بوكينج ↔ نزيل)
         const allTabs = [
             { id: 'booking-nazeel-compare', label: 'مراجعة المقارنة (بوكينج ↔ نزيل)', icon: '🎯', order: 1 }
         ];
 
-        // Get user's selected departments
         let userDepartments = [];
         try {
             if (typeof getSecureStorage === 'function') {
                 userDepartments = getSecureStorage('userDepartments') || [];
-            } else if (typeof getStorageItem === 'function') { // Fallback for legacy
-                userDepartments = getStorageItem('userDepartments') || [];
             } else {
                 const stored = localStorage.getItem('userDepartments');
                 if (stored) {
                     try {
                         userDepartments = JSON.parse(stored);
                     } catch (e) {
-                        console.warn('Error parsing userDepartments:', e);
                         userDepartments = [];
                     }
                 }
             }
         } catch (e) {
-            console.error('Error accessing storage:', e);
             userDepartments = [];
         }
+        if (!Array.isArray(userDepartments)) userDepartments = [];
 
-        // Ensure userDepartments is an array
-        if (!Array.isArray(userDepartments)) {
-            userDepartments = [];
-        }
-
-        // Filter tabs based on user's selected departments
-        const defaultTabs = userDepartments.length > 0
+        this.tabs = userDepartments.length > 0
             ? allTabs.filter(tab => userDepartments.includes(tab.id))
-            : allTabs; // If no selection, show all (fallback)
-
-        // DIRECT LOCAL MODE: Bypass Firebase completely
-        console.log('Switching to Local-First Mode: Ignoring Firebase config');
-        this.tabs = defaultTabs;
-
-        // Ensure we have at least one tab
-        if (this.tabs.length === 0) {
-            this.tabs = allTabs; // Fallback to all tabs
-        }
-
-        // No need to save to Firebase in Local Mode
+            : allTabs;
+        if (this.tabs.length === 0) this.tabs = allTabs;
     }
 
     /**
-     * Save tabs to Firebase
+     * Save tabs — غير مستخدم (تبويب واحد ثابت، تخزين محلي)
      */
     async saveTabs() {
-        // Local-First Mode — no Firebase saving needed
+        // لا حاجة لحفظ — التبويبات محلية
     }
 
     /**
-     * Render tabs in sidebar
+     * Render tabs in sidebar (no-op when لا شريط جانبي — tab-list غير موجود في الـ DOM)
      */
     renderTabs() {
         const tabList = document.getElementById('tab-list');
@@ -149,12 +125,10 @@ class TabManager {
 
         this.activeTab = tabId;
 
-        // حفظ الصفحة النشطة في localStorage
+        // حفظ الصفحة النشطة في localStorage (تخزين محلي)
         try {
             if (typeof setSecureStorage === 'function') {
                 setSecureStorage('lastActiveTab', tabId);
-            } else if (typeof setStorageItem === 'function') {
-                setStorageItem('lastActiveTab', tabId);
             } else {
                 localStorage.setItem('lastActiveTab', tabId);
             }
