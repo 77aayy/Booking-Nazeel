@@ -2,37 +2,16 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 
-echo ========================================
-echo   تحديث GitHub (Vibe Coding Edition)
-echo ========================================
+:: إضافة كل التعديلات اللي عملتها
+git add . 
 
-:: التأكد من حالة المستودع
-git status
+:: الـ Commit بالتوقيت الحالي عشان تتابع شغلك
+set "MSG=Update: %date% %time%" 
+git commit -m "%MSG%" 
 
-:: إضافة الملفات
-git add .
-if errorlevel 1 (
-    echo [خطأ] فشل git add
-    pause
-    exit /b 1
-)
+:: الرفع مباشرة للـ GitHub (تأكد إن الفرع main)
+git push origin main 
 
-:: الـ Commit برسالة تلقائية
-set "MSG=Update: %date% %time%"
-git commit -m "%MSG%"
-
-:: سحب التغييرات الجديدة الأول عشان نتفادى الـ Conflict
-echo جاري سحب التحديثات من السيرفر...
-git pull origin main
-
-:: الرفع (تأكد لو الفرع عندك master غير main)
-echo جاري الرفع إلى GitHub...
-git push origin main
-
-if errorlevel 1 (
-    echo [خطأ] فشل الرفع. اتأكد من اسم الـ Branch أو الـ Permissions.
-) else (
-    echo تم الرفع بنجاح يا هندسة.
-)
-
-pause
+echo.
+echo عاش يا هندسة.. التعديلات ارفعت.
+pause [cite: 4]
