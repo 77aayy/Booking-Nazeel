@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<title>Adora Auditor Elite | V83.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+    :root { 
+        --adora-teal: #00A9A4; --adora-gold: #FFC107; --bn-bg: #021f2b; 
+        --st-ok: #10b981; --st-err: #ef4444;
+    }
+    body { margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; color: #fff; background: var(--bn-bg); min-height: 100vh; overflow-x: hidden; }
+
+    /* أنميشن الرفع "الشغل العالي" - محمي */
+    .drop-zone { border: 2px dashed rgba(0, 169, 164, 0.3); border-radius: 20px; padding: 40px; cursor: pointer; background: rgba(0,0,0,0.2); transition: 0.4s; text-align: center; position: relative; }
+    .drop-zone.loaded { border: 2px solid var(--st-ok); background: rgba(16, 185, 129, 0.1); animation: successPulse 1.5s infinite; }
+    @keyframes successPulse { 0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); } 50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); } }
+
+    /* Header & Branding */
+    .app-header { background: rgba(0, 169, 164, 0.05); backdrop-filter: blur(15px); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--adora-teal); position: sticky; top:0; z-index: 100; }
+    .logo-img { height: 50px; filter: drop-shadow(0 0 5px var(--adora-teal)); }
+
+    /* Dashboard & KPIs */
+    .dashboard { display: none; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; padding: 20px 25px; }
+    .kpi-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(0, 169, 164, 0.2); border-radius: 12px; padding: 15px; text-align: center; }
+    .kpi-num { font-size: 1.4rem; font-weight: 900; color: var(--adora-teal); }
+
+    /* Loader */
+    .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 31, 43, 0.98); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+    .progress-bar { height: 10px; width: 0%; background: var(--adora-teal); transition: 0.3s; box-shadow: 0 0 15px var(--adora-teal); }
+
+    /* Table UI */
+    .results-wrap { display: none; padding: 0 25px; }
+    .filter-pills { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 15px; }
+    .pill { white-space: nowrap; padding: 10px 22px; border-radius: 50px; background: rgba(2, 42, 58, 0.8); border: 1px solid rgba(0, 169, 164, 0.3); color: #fff; font-size: 0.75rem; cursor: pointer; font-weight: 700; transition: 0.3s; }
+    .pill.active { background: var(--adora-teal); color: #000; }
+
+    table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+    tbody tr { background: rgba(255, 255, 255, 0.02); transition: 0.2s; }
+    td { padding: 12px; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
+    .reason-box { font-size: 0.7rem; color: var(--adora-gold); background: rgba(255, 193, 7, 0.05); padding: 5px 10px; border-radius: 6px; border-right: 3px solid var(--adora-gold); }
+    .btn-adora { background: var(--adora-teal); color: #fff; border: none; padding: 15px 50px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(0,169,164,0.3); }
+
+    @media print {
+        body { background: #fff !important; color: #000 !important; }
+        .booking-nazeel-page-wrapper { display: none !important; }
+        #printArea { display: block !important; width: 100%; padding: 10px; }
+        .print-table { width: 100%; border-collapse: collapse !important; border: 1.2pt solid #000; }
+        .print-table th { background: #f2f2f2 !important; border: 1pt solid #000; padding: 4px; font-size: 8.5pt; font-weight: bold; }
+        .print-table td { border: 0.5pt solid #666; padding: 3px 5px; font-size: 7.5pt; line-height: 1.1; }
+    }
+    #printArea { display: none; }
+</style>
+</head>
+<body>
+
+<div class="booking-nazeel-page-wrapper">
+    <div class="loader-overlay" id="loader">
+        <div style="text-align:center;">
+            <div id="perc" style="font-size:4rem; font-weight:900; color:var(--adora-teal)">0%</div>
+            <div style="width:300px; height:10px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; margin:20px 0;">
+                <div id="pBar" style="height:100%; width:0%; background:var(--adora-teal); transition:0.3s;"></div>
+            </div>
+            <div id="taskText" style="font-weight:800;">جاري صيد الـ 150 مطابق V83.0...</div>
+        </div>
+    </div>
+
+    <header class="app-header">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="adora-logo.jpg" class="logo-img" alt="Adora Logo">
+            <div><h1 style="margin:0; font-size:1.3rem; color:var(--adora-teal)">ADORA AUDITOR ELITE</h1><p style="margin:0; font-size:0.6rem; opacity:0.6;">V83.0 - محرك البحث الصوتي المطور</p></div>
+        </div>
+        <button id="pBtn" class="pill" style="background:#166882; display:none; color:#fff; border:none; cursor:pointer;" onclick="generateOfficialPrint()"><i class="fas fa-print"></i> طباعة كشف الحسابات</button>
+    </header>
+
+    <div id="uploadCard" style="text-align:center; padding: 60px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px; max-width:800px; margin: 0 auto 30px;">
+            <label class="drop-zone" id="dz-n"><i class="fas fa-file-invoice-dollar fa-3x" style="color:var(--adora-gold)"></i><p>سجلات نزيل (Nazeel)</p><input id="nFile" type="file" hidden onchange="activateZone('dz-n')"/></label>
+            <label class="drop-zone" id="dz-b"><i class="fas fa-passport fa-3x" style="color:var(--adora-teal)"></i><p>حجوزات بوكينج (Booking)</p><input id="bFile" type="file" hidden onchange="activateZone('dz-b')"/></label>
+        </div>
+        <button class="btn-adora" onclick="launchMasterAudit()">إطلاق القناص الصوتي (V83.0)</button>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="kpi-card"><span class="kpi-num" id="kTotal">0</span><small>إجمالي الحجوزات</small></div>
+        <div class="kpi-card" style="border-bottom: 3px solid var(--st-ok);"><span class="kpi-num" id="kMatch" style="color:var(--st-ok)">0</span><small>مطابق (مؤكد)</small></div>
+        <div class="kpi-card" style="border-bottom: 3px solid #8e2de2;"><span class="kpi-num" id="kAi" style="color:#ce93d8">0</span><small>صيد الـ AI</small></div>
+        <div class="kpi-card" style="border-bottom: 3px solid var(--st-err);"><span class="kpi-num" id="kCan" style="color:var(--st-err)">0</span><small>ملغي / لم يحضر</small></div>
+        <div class="kpi-card" style="border-bottom: 3px solid var(--adora-gold);"><span class="kpi-num" id="kDiff">0</span><small>فرق الإيراد</small></div>
+    </div>
+
+    <div class="results-wrap" id="resultsArea">
+        <div class="filter-pills" id="dynamicFilters">
+            <div class="pill active" id="fAll" onclick="setFilter('all', this)">عرض الكل</div>
+        </div>
+        <table id="mainTable">
+            <thead>
+                <tr style="color:var(--adora-teal); font-size:0.75rem; text-align:right;">
+                    <th>#</th><th width="22%">الضيف (Booking)</th><th width="10%">الحالة</th><th width="22%">سجل نزيل</th><th width="15%">الارتباط</th><th width="18%">التواريخ</th><th width="10%">فرق مالي</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <button class="btn-adora" id="moreBtn" style="margin:20px auto; display:block; padding:10px 40px" onclick="showMoreRows()">إظهار المزيد +</button>
+    </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+    const KEY = "AIzaSyD_XDLjvHhNCuIPSymraAytrJi2ktCL2Vo";
+    const statusMapAr = { 'ok':'مؤكد', 'cancelled':'ملغي', 'no_show':'لم يحضر', 'fraudulent':'احتيال', 'stayed':'سكن', 'cancelled_by_guest':'ملغي من الضيف' };
+    let allRows = [], filtered = [], visible = 20, curFilter = 'all';
+
+    function activateZone(id) { document.getElementById(id).classList.add('loaded'); }
+
+    // رادار الأسماء المتوحش - يفكك الفواصل ويعكس الترتيب
+    function getSafeName(obj) {
+        if(!obj) return "-";
+        const keys = ["اسم الضيف", "إسم العميل", "Guest Name", "Name", "Customer"];
+        let name = "-";
+        for(let k of keys) { if(obj[k]) { name = String(obj[k]).trim(); break; } }
+        if(name === "-") { for(let k in obj) { if(isNaN(obj[k]) && String(obj[k]).length > 3) { name = String(obj[k]).trim(); break; } } }
+        
+        // معالجة Shaqquor, Mohammad -> Mohammad Shaqquor
+        if(name.includes(",")) {
+            let parts = name.split(",").map(p => p.trim());
+            name = parts.reverse().join(" ");
+        }
+        return name;
+    }
+
+    function cleanNormalize(s) { 
+        return String(s||"").toLowerCase()
+            .replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
+            .replace(/al-|el-|bin |mr |ms |dr |el |el-/g, "")
+            .replace(/[^a-z0-9ا-ي]/g, "").trim(); 
+    }
+
+    async function launchMasterAudit() {
+        const f1 = document.getElementById('nFile').files[0], f2 = document.getElementById('bFile').files[0];
+        if(!f1 || !f2) return alert("يا وحش ارفع الملفات أولاً!");
+        document.getElementById('loader').style.display = 'flex';
+        const nRaw = await readSheet(f1), bRaw = await readSheet(f2);
+        let nazeel = parse(nRaw, ["إسم العميل"]), booking = parse(bRaw, ["رقم الحجز", "السعر"]);
+        await processAudit(booking, nazeel);
+    }
+
+    async function processAudit(booking, nazeel) {
+        allRows = []; let taken = new Set(), s = { total:booking.length, ok:0, ai:0, can:0, diff:0 };
+        
+        // 1. الفحص الصارم المطور (علاج الفواصل والقلب)
+        booking.forEach((b, idx) => {
+            const bRef = String(b["رقم الحجز"] || "").trim(), bName = cleanNormalize(getSafeName(b));
+            let mIdx = nazeel.findIndex((n, i) => !taken.has(i) && ( (bRef !== "" && JSON.stringify(n).includes(bRef)) || (cleanNormalize(getSafeName(n)) === bName) ));
+            
+            if (mIdx !== -1) {
+                const n = nazeel[mIdx], bp = parseFloat(String(b["السعر"]||0).replace(/[^0-9.]/g, ""))*1.175;
+                if(String(b["الحالة"]).toLowerCase().includes('ok')) s.ok++; else s.can++;
+                storeResult(b, n, 'v18', idx, mIdx, taken, s, bp, bRef !== "" && JSON.stringify(n).includes(bRef) ? `🆔 مرجع` : "👤 اسم");
+            }
+        });
+
+        // 2. الـ AI القناص (علاج الـ 150 مطابق مفقود)
+        let missed = booking.filter((_, i) => !allRows.some(r => r.bIdx === i));
+        for (let [cnt, b] of missed.entries()) {
+            updateLoader(Math.round(((cnt+1)/missed.length)*100), `تحليل AI متطور للضيف: ${getSafeName(b)}`);
+            let pool = nazeel.filter((_, i) => !taken.has(i)).slice(0, 20).map(n => getSafeName(n));
+            const res = await callAI(getSafeName(b), pool);
+            if (res && res.match) {
+                let mIdx = nazeel.findIndex(n => getSafeName(n) === res.name);
+                s.ai++; if(String(b["الحالة"]).toLowerCase().includes('ok')) s.ok++;
+                storeResult(b, nazeel[mIdx], 'ai', booking.indexOf(b), mIdx, taken, s, parseFloat(String(b["السعر"]||0).replace(/[^0-9.]/g, ""))*1.175, "🧠 ذكاء اصطناعي");
+            } else { allRows.push({ b, n:null, type:'miss', reason:'❌ مفقود', bIdx: booking.indexOf(b), bp:0, np:0, diff:0 }); s.can++; }
+        }
+        finishEngine(s);
+    }
+
+    function storeResult(b, n, type, bIdx, nIdx, taken, s, bp, reason) {
+        taken.add(nIdx); let np = parseFloat(String(n["الايجار الكلي"]||n["الاجمالي"]||"0").replace(/[^0-9.]/g, ""));
+        let d = np - bp; allRows.push({ b, n, type, bp, np, reason, bIdx, diff: (b && String(b["الحالة"]).toLowerCase().includes('ok')) ? d : 0 });
+        if(b && String(b["الحالة"]).toLowerCase().includes('ok')) s.diff += d;
+    }
+
+    function finishEngine(s) {
+        document.getElementById('kTotal').innerText = s.total; document.getElementById('kMatch').innerText = s.ok;
+        document.getElementById('kAi').innerText = s.ai; document.getElementById('kCan').innerText = s.can;
+        document.getElementById('kDiff').innerText = s.diff.toFixed(0);
+        buildFiltersUI(); setFilter('all', document.getElementById('fAll'));
+        document.getElementById('loader').style.display = 'none'; document.getElementById('uploadCard').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'grid'; document.getElementById('resultsArea').style.display = 'block'; document.getElementById('pBtn').style.display = 'block';
+    }
+
+    function setFilter(f, btn) {
+        if(btn) { document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); }
+        curFilter = f; filtered = allRows.filter(r => f==='all' || r.type===f || (r.b && String(r.b["الحالة"]).toLowerCase().includes(f)));
+        visible = 20; renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody'); tbody.innerHTML = "";
+        const days = ["الأحد","إثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"];
+        filtered.slice(0, visible).forEach((r, i) => {
+            const st = r.b ? String(r.b["الحالة"]||"").toLowerCase() : "nazeel";
+            const bD = parseDate(r.b["تسجيل الوصول"]), nD = r.n ? parseDate(r.n["تاريخ الدخول"]) : null;
+            const diffD = (nD && bD) ? Math.round((nD - bD)/(864e5)) + " يوم" : "ـ";
+            tbody.innerHTML += `<tr><td>${i+1}</td><td><b style="color:var(--adora-teal)">${getSafeName(r.b)}</b><br><small style="opacity:0.5">${r.b?(r.b["رقم الحجز"]||"-"):"-"}</small></td>
+            <td><span style="color:${st.includes('ok')?'var(--st-ok)':'var(--st-err)'}">${(statusMapAr[st]||st).toUpperCase()}</span></td>
+            <td>${r.n ? getSafeName(r.n) : "-"}</td><td><div class="reason-box">${r.reason}</div></td>
+            <td style="font-size:0.75rem;">📅 B:${bD?days[bD.getDay()]+" "+bD.toLocaleDateString():"ـ"}<br>🏨 N:${nD?days[nD.getDay()]+" "+nD.toLocaleDateString():"ـ"}</td>
+            <td style="color:${r.diff>5?'var(--st-ok)':'var(--st-err)'}"><b>${r.n&&r.b?r.diff.toFixed(0):"-"}</b><br><small>(${diffD})</small></td></tr>`;
+        });
+        document.getElementById('moreBtn').style.display = visible >= filtered.length ? 'none' : 'block';
+    }
+
+    function buildFiltersUI() {
+        const div = document.getElementById('dynamicFilters');
+        const st = [...new Set(allRows.filter(r=>r.b).map(r => String(r.b["الحالة"]||"").toLowerCase()))];
+        st.forEach(s => { if(s) div.innerHTML += `<div class="pill" onclick="setFilter('${s}', this)">حالة: ${statusMapAr[s] || s}</div>`; });
+    }
+
+    function generateOfficialPrint() {
+        const area = document.getElementById('printArea');
+        let h = `<div style="text-align:center"><h2>تقرير تدقيق الحجوزات - ADORA AUDITOR</h2><p>عدد السجلات المفلترة: ${filtered.length}</p></div><table class="print-table"><thead><tr><th>#</th><th>الضيف</th><th>الحالة</th><th>سجل نزيل</th><th>الارتباط</th><th>التواريخ</th><th>الفرق</th></tr></thead><tbody>`;
+        filtered.forEach((r, i) => {
+            const bD = parseDate(r.b["تسجيل الوصول"]), nD = r.n ? parseDate(r.n["تاريخ الدخول"]) : null;
+            h += `<tr><td>${i+1}</td><td>${getSafeName(r.b)}</td><td>${statusMapAr[String(r.b["الحالة"]).toLowerCase()]||r.b["الحالة"]}</td><td>${r.n?getSafeName(r.n):"-"}</td><td>${r.reason}</td><td>B:${bD?bD.toLocaleDateString():"-"}/N:${nD?nD.toLocaleDateString():"-"}</td><td>${r.n&&r.b?r.diff.toFixed(0):"-"}</td></tr>`;
+        });
+        area.innerHTML = h + `</tbody></table>`; window.print();
+    }
+
+    function showMoreRows() { visible += 20; renderTable(); }
+    function updateLoader(p, t) { document.getElementById('pBar').style.width = p+'%'; document.getElementById('perc').innerText = p+'%'; document.getElementById('taskText').innerText = t; }
+    async function readSheet(f) { return new Promise(res => { const r = new FileReader(); r.onload = e => res(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type:'array'}).SheetNames[0]], {header:1})); r.readAsArrayBuffer(f); }); }
+    function parse(raw, keys) { let h = raw.findIndex(r => keys.every(k => JSON.stringify(r).includes(k))) || 0; let headers = raw[h].map(x=>String(x||"").trim()); return raw.slice(h+1).map(r => { let o={}; headers.forEach((h,i)=>o[h]=r[i]); return o; }); }
+    function parseDate(v) { if(!v && v!==0) return null; if(typeof v === 'number') return new Date((v - 25569)*86400000); if(typeof v === 'string') { let p = v.split(/[-/ ]/); let d = p[0].length===4 ? new Date(p[0],p[1]-1,p[2]) : new Date(p[2],p[1]-1,p[0]); return isNaN(d.getTime()) ? null : d; } return null; }
+    async function callAI(n, p) { try { const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: `IS GUEST "${n}" THE SAME PERSON AS ANY IN THIS LIST (PHONETIC/CROSS-LANGUAGE)? [${p.join(',')}]. JSON ONLY: {"match":true, "name":"ExactNameFromList"}` }] }] }) }); const d = await res.json(); return JSON.parse(d.candidates[0].content.parts[0].text.match(/\{.*\}/s)[0]); } catch(e) { return null; } }
+</script>
+</body>
+</html>
