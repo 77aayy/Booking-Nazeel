@@ -216,8 +216,8 @@ class BookingNazeelComparePage {
     @media print {
         .app-header, .hero-card, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay, .loader-perf, .perf-summary, i { display: none !important; }
         .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; padding: 0 !important; }
-        .results-wrap { max-width: 100% !important; padding: 0 !important; }
-        .table-responsive { border: none !important; overflow: visible !important; }
+        .results-wrap { display: block !important; max-width: 100% !important; padding: 0 !important; visibility: visible !important; opacity: 1 !important; }
+        .table-responsive { border: none !important; overflow: visible !important; display: block !important; }
         table { border-collapse: collapse !important; width: 100% !important; font-size: 7pt !important; line-height: 1.1 !important; color: #000 !important; }
         thead th { background: #fff !important; color: #000 !important; border: 1px solid #000 !important; padding: 4px !important; -webkit-print-color-adjust: exact; }
         tbody td { border: 1px solid #ccc !important; color: #000 !important; padding: 2px 4px !important; background: none !important; }
