@@ -107,14 +107,27 @@ class BookingNazeelComparePage {
         border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer;
         transition: 0.3s; position: relative; overflow: hidden;
     }
-    .drop-zone.file-loaded { border-color: #10b981; background: rgba(16, 185, 129, 0.05); border-style: solid; animation: q-pulse-success 1.5s ease-out; }
-    .drop-zone.file-loaded i { color: #10b981 !important; transform: scale(1.1); }
-    .drop-zone.file-loaded h3 { color: #10b981; }
+    .drop-zone.file-loaded { 
+        border-color: #10b981; background: rgba(16, 185, 129, 0.08); border-style: solid; 
+        transform: translateY(-10px) scale(1.02); box-shadow: 0 15px 40px rgba(16, 185, 129, 0.25);
+        animation: q-pulse-success 2s infinite ease-in-out;
+    }
+    .drop-zone.file-loaded i { color: #10b981 !important; animation: icon-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+    .drop-zone.file-loaded h3 { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
+
+    .success-flash-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: #fff; opacity: 0; pointer-events: none; z-index: 5;
+    }
+    .flash-active { animation: flash-anim 0.6s ease-out; }
+
+    @keyframes flash-anim { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+    @keyframes icon-pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1.2); opacity: 1; } }
     
     @keyframes q-pulse-success {
-        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-        70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        0% { box-shadow: 0 15px 40px rgba(16, 185, 129, 0.25); }
+        50% { box-shadow: 0 15px 60px rgba(16, 185, 129, 0.45); }
+        100% { box-shadow: 0 15px 40px rgba(16, 185, 129, 0.25); }
     }
 
     .upload-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--bn-primary); width: 0; transition: 0.2s; }
@@ -317,12 +330,14 @@ class BookingNazeelComparePage {
                 <h3>نزيل (Guests)</h3>
                 <input accept=".xlsx,.xls,.csv" id="nazeelFile" type="file"/>
                 <div class="upload-progress" id="progress-naz"></div>
+                <div class="success-flash-overlay" id="flash-naz"></div>
             </label>
             <label class="drop-zone" id="dz-book">
                 <i class="fas fa-passport" style="color:var(--bn-primary)"></i>
                 <h3>بوكينج (Booking)</h3>
                 <input accept=".xlsx,.xls,.csv" id="bookingFile" type="file"/>
                 <div class="upload-progress" id="progress-book"></div>
+                <div class="success-flash-overlay" id="flash-book"></div>
             </label>
         </div>
         <p class="auto-hint" style="margin:12px 0 0; font-size:0.8rem; color:rgba(255,255,255,0.65);">بعد اختيار الملفين يبدأ التحليل تلقائياً.</p>
@@ -999,22 +1014,28 @@ class BookingNazeelComparePage {
                 nazeelFile.addEventListener('change', function () {
                     const dz = document.getElementById('dz-naz');
                     const progress = document.getElementById('progress-naz');
+                    const flash = document.getElementById('flash-naz');
+                    const icon = dz ? dz.querySelector('i') : null;
                     const h3 = dz ? dz.querySelector('h3') : null;
+
                     if (dz) dz.classList.add('file-loaded');
+                    if (flash) { flash.classList.remove('flash-active'); void flash.offsetWidth; flash.classList.add('flash-active'); }
+                    if (icon) { icon.className = 'fas fa-check-double'; }
                     if (h3 && this.files[0]) {
                         h3.innerHTML = `نزيل (Guests) <span class="file-name">✅ ${this.files[0].name}</span>`;
                     }
                     // شريط تحميل سريع (حوالي 0.2 ثانية)
                     if (progress) {
                         progress.style.width = '0%';
+                        progress.style.opacity = '1';
                         let width = 0;
                         const interval = setInterval(() => {
-                            width += 10;
+                            width += 15;
                             if (width > 100) width = 100;
                             progress.style.width = width + '%';
                             if (width >= 100) {
                                 clearInterval(interval);
-                                setTimeout(() => { progress.style.opacity = '0'; }, 500);
+                                setTimeout(() => { progress.style.opacity = '0'; }, 300);
                             }
                         }, 20);
                     }
@@ -1025,22 +1046,28 @@ class BookingNazeelComparePage {
                 bookingFile.addEventListener('change', function () {
                     const dz = document.getElementById('dz-book');
                     const progress = document.getElementById('progress-book');
+                    const flash = document.getElementById('flash-book');
+                    const icon = dz ? dz.querySelector('i') : null;
                     const h3 = dz ? dz.querySelector('h3') : null;
+
                     if (dz) dz.classList.add('file-loaded');
+                    if (flash) { flash.classList.remove('flash-active'); void flash.offsetWidth; flash.classList.add('flash-active'); }
+                    if (icon) { icon.className = 'fas fa-check-double'; }
                     if (h3 && this.files[0]) {
                         h3.innerHTML = `بوكينج (Booking) <span class="file-name">✅ ${this.files[0].name}</span>`;
                     }
                     // شريط تحميل سريع (حوالي 0.2 ثانية)
                     if (progress) {
                         progress.style.width = '0%';
+                        progress.style.opacity = '1';
                         let width = 0;
                         const interval = setInterval(() => {
-                            width += 10;
+                            width += 15;
                             if (width > 100) width = 100;
                             progress.style.width = width + '%';
                             if (width >= 100) {
                                 clearInterval(interval);
-                                setTimeout(() => { progress.style.opacity = '0'; }, 500);
+                                setTimeout(() => { progress.style.opacity = '0'; }, 300);
                             }
                         }, 20);
                     }
