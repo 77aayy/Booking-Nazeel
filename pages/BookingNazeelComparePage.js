@@ -214,16 +214,15 @@ class BookingNazeelComparePage {
     }
 
     @media print {
-        .app-header, .hero-card, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay, .loader-perf, .perf-summary { display: none !important; }
+        .app-header, .hero-card, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay, .loader-perf, .perf-summary, i { display: none !important; }
         .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; padding: 0 !important; }
         .results-wrap { max-width: 100% !important; padding: 0 !important; }
         .table-responsive { border: none !important; overflow: visible !important; }
-        table { border-collapse: collapse !important; width: 100% !important; font-size: 7.5pt !important; line-height: 1.1 !important; }
-        thead th { background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; padding: 4px !important; -webkit-print-color-adjust: exact; }
-        tbody td { border: 1px solid #e2e8f0 !important; color: #000 !important; padding: 2px 4px !important; }
-        .match-tag { border: 1px solid #ddd !important; background: #fff !important; color: #333 !important; padding: 1px 3px !important; font-size: 6.5pt !important; }
-        .diff-pos { color: #059669 !important; font-weight: 700 !important; }
-        .diff-neg { color: #dc2626 !important; font-weight: 700 !important; }
+        table { border-collapse: collapse !important; width: 100% !important; font-size: 7pt !important; line-height: 1.1 !important; color: #000 !important; }
+        thead th { background: #fff !important; color: #000 !important; border: 1px solid #000 !important; padding: 4px !important; -webkit-print-color-adjust: exact; }
+        tbody td { border: 1px solid #ccc !important; color: #000 !important; padding: 2px 4px !important; background: none !important; }
+        .match-tag { color: #000 !important; background: none !important; border: none !important; padding: 0 !important; font-size: 7pt !important; font-weight: bold; }
+        .st-ok, .st-no, .diff-pos, .diff-neg { color: #000 !important; font-weight: bold !important; }
         
         /* Print Summary Styles */
         .print-summary { display: block !important; margin-bottom: 30px; page-break-after: avoid; }
@@ -1942,23 +1941,10 @@ class BookingNazeelComparePage {
             window.allRowsData.push(row);
         };
 
-        window.renderTable = function () {
-            const mainTable = document.getElementById("mainTable");
-            const tbody = mainTable ? mainTable.querySelector('tbody') : null;
-            if (!tbody) return;
-            tbody.innerHTML = "";
-            const taxValEl = document.getElementById('taxVal');
-            const muniValEl = document.getElementById('muniVal');
-            const taxMultiplier = 1 + (parseFloat(taxValEl && taxValEl.value ? taxValEl.value : 0) / 100) + (parseFloat(muniValEl && muniValEl.value ? muniValEl.value : 0) / 100);
-
-            if (!mainTable.getAttribute("data-sort-col")) {
-                window.allRowsData.sort((a, b) => b.timestamp - a.timestamp);
-            }
-
-            // فلترة الصفوف أولاً
+        window.getFilteredRows = function () {
             const searchInputEl = document.getElementById('searchInput');
             const searchTerm = (searchInputEl && searchInputEl.value) ? searchInputEl.value.toLowerCase() : '';
-            let filtered = (window.allRowsData || []).filter(function (row) {
+            return (window.allRowsData || []).filter(function (row) {
                 let filters = (window.currentFilter || 'all').split(',');
                 if (window.currentFilter === 'review') {
                     var needReview = row.type === 'guess' || row.type === 'extension' || row.type === 'money' || row.type === 'miss' || row.type === 'conflict' || ((row.matchConfidence || 0) > 0 && (row.matchConfidence || 0) < 85) || String(row.matchReason || '').indexOf('اختلاف اسمي') !== -1;
@@ -1975,6 +1961,23 @@ class BookingNazeelComparePage {
                 }
                 return true;
             });
+        };
+
+        window.renderTable = function () {
+            const mainTable = document.getElementById("mainTable");
+            const tbody = mainTable ? mainTable.querySelector('tbody') : null;
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            const taxValEl = document.getElementById('taxVal');
+            const muniValEl = document.getElementById('muniVal');
+            const taxMultiplier = 1 + (parseFloat(taxValEl && taxValEl.value ? taxValEl.value : 0) / 100) + (parseFloat(muniValEl && muniValEl.value ? muniValEl.value : 0) / 100);
+
+            if (!mainTable.getAttribute("data-sort-col")) {
+                window.allRowsData.sort((a, b) => b.timestamp - a.timestamp);
+            }
+
+            // استخدام الفلترة الموحدة
+            const filtered = window.getFilteredRows();
 
             // تجميع حسب رقم الحجز: صف واحد لكل حجز، أسماء النزلاء مدمجة (تفادي تكرار الشمراني، بدر، عائشة لنفس الحجز)
             let displayRows = [];
@@ -2227,7 +2230,26 @@ class BookingNazeelComparePage {
                 var wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
                 XLSX.utils.book_append_sheet(wb, wsSummary, "ملخص");
             }
-            var wsDetail = XLSX.utils.table_to_sheet(document.getElementById('mainTable'));
+
+            // إنشاء ورقة التفاصيل من البيانات المفلترة مباشرة لضمان نظافة البيانات
+            const filtered = window.getFilteredRows();
+            const detailHeader = ["#", "الاسم (Booking)", "الحالة", "الاسم (Nazeel)", "نوع الربط", "مبلغ بوكينج", "مبلغ نزيل", "الفرق", "التواريخ"];
+            const detailRows = filtered.map((row, i) => {
+                const dates = 'B: ' + (row.b["تسجيل الوصول"] || '-') + ' -> ' + (row.b["تسجيل المغادرة"] || '-') + ' | N: ' + (row.n ? (row.n["تسجيل الدخول"] || '-') + ' -> ' + (row.n["تسجيل الخروج"] || '-') : '-');
+                return [
+                    i + 1,
+                    row.bName,
+                    row.status || (row.isOk ? 'Confirmed' : 'Cancelled'),
+                    row.n ? row.n["إسم العميل"] : '-',
+                    row.matchReason,
+                    row.bPrice,
+                    row.nPrice,
+                    row.nPrice - row.bPrice,
+                    dates
+                ];
+            });
+
+            const wsDetail = XLSX.utils.aoa_to_sheet([detailHeader, ...detailRows]);
             XLSX.utils.book_append_sheet(wb, wsDetail, "التفاصيل");
             XLSX.writeFile(wb, "Adora_Report.xlsx");
         };
