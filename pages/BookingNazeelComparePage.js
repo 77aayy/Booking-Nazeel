@@ -205,10 +205,10 @@ class BookingNazeelComparePage {
         .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; padding: 0 !important; }
         .results-wrap { max-width: 100% !important; padding: 0 !important; }
         .table-responsive { border: none !important; overflow: visible !important; }
-        table { border-collapse: collapse !important; width: 100% !important; font-size: 8.5pt !important; }
-        thead th { background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; -webkit-print-color-adjust: exact; }
-        tbody td { border: 1px solid #e2e8f0 !important; color: #000 !important; padding: 6px 4px !important; }
-        .match-tag { border: 1px solid #ddd !important; background: #fff !important; color: #333 !important; padding: 2px 5px !important; }
+        table { border-collapse: collapse !important; width: 100% !important; font-size: 7.5pt !important; line-height: 1.1 !important; }
+        thead th { background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; padding: 4px !important; -webkit-print-color-adjust: exact; }
+        tbody td { border: 1px solid #e2e8f0 !important; color: #000 !important; padding: 2px 4px !important; }
+        .match-tag { border: 1px solid #ddd !important; background: #fff !important; color: #333 !important; padding: 1px 3px !important; font-size: 6.5pt !important; }
         .diff-pos { color: #059669 !important; font-weight: 700 !important; }
         .diff-neg { color: #dc2626 !important; font-weight: 700 !important; }
         
