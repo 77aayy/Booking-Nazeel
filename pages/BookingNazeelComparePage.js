@@ -49,7 +49,7 @@ class BookingNazeelComparePage {
     .q-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .q-ring circle { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
     .q-ring .bg { stroke: rgba(255, 255, 255, 0.05); }
-    .q-ring .progress { stroke: url(#q-grad); stroke-dasharray: 753; stroke-dashoffset: 753; filter: drop-shadow(0 0 12px var(--bn-primary)); }
+    .q-ring .progress { stroke: url(#q-grad); stroke-dasharray: 753; stroke-dashoffset: 753; }
     
     .q-center { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 10; }
     .q-gem { font-size: 3.5rem; color: var(--bn-primary); filter: drop-shadow(0 0 15px var(--bn-primary)); animation: q-pulse 2s infinite ease-in-out; }
@@ -105,8 +105,15 @@ class BookingNazeelComparePage {
     .drop-zone {
         background: rgba(255,255,255,0.02); border: 2px dashed var(--bn-border);
         border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer;
-        transition: 0.3s; position: relative; overflow: hidden;
+        transition: 0.3s; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
+    .drop-zone:hover { border-color: rgba(20, 184, 166, 0.6); background: rgba(0,0,0,0.3); }
+    .dz-btn { 
+        background: var(--bn-primary); color: #000; border: none; padding: 8px 24px; border-radius: 50px; 
+        font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 0.85rem; margin-top: 15px; 
+        box-shadow: 0 4px 10px rgba(20,184,166,0.2); display: inline-block;
+    }
+    .drop-zone:hover .dz-btn { background: #22d3ee; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(20,184,166,0.4); }
     .drop-zone.file-loaded { 
         border-color: #10b981; background: rgba(16, 185, 129, 0.08); border-style: solid; 
         transform: translateY(-10px) scale(1.02); box-shadow: 0 15px 40px rgba(16, 185, 129, 0.25);
@@ -214,34 +221,28 @@ class BookingNazeelComparePage {
     }
 
     @media print {
-        .app-header, .hero-card, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay, .loader-perf, .perf-summary, i { display: none !important; }
-        .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; padding: 0 !important; }
-        .results-wrap { display: block !important; max-width: 100% !important; padding: 0 !important; visibility: visible !important; opacity: 1 !important; }
-        .table-responsive { border: none !important; overflow: visible !important; display: block !important; }
-        table { border-collapse: collapse !important; width: 100% !important; font-size: 7pt !important; line-height: 1.1 !important; color: #000 !important; }
-        thead th { background: #fff !important; color: #000 !important; border: 1px solid #000 !important; padding: 4px !important; -webkit-print-color-adjust: exact; }
-        tbody td { border: 1px solid #ccc !important; color: #000 !important; padding: 2px 4px !important; background: none !important; }
-        .match-tag { color: #000 !important; background: none !important; border: none !important; padding: 0 !important; font-size: 7pt !important; font-weight: bold; }
-        .st-ok, .st-no, .diff-pos, .diff-neg { color: #000 !important; font-weight: bold !important; }
+        @page { size: auto; margin: 10mm; }
+        html, body { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
+        .app-header, .hero-card, .dashboard, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay, .loader-perf, .perf-summary, i, .print-summary { display: none !important; }
+        .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
+        .results-wrap { display: block !important; width: 100% !important; max-width: none !important; padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; }
+        .table-responsive { border: none !important; overflow: visible !important; display: block !important; padding: 0 !important; margin: 0 !important; height: auto !important; page-break-inside: auto; }
+        table { border-collapse: collapse !important; width: 100% !important; font-size: 9pt !important; line-height: 1.2 !important; color: #000 !important; margin: 0 !important; page-break-inside: auto; }
+        thead { display: table-header-group !important; }
+        tr { page-break-inside: avoid !important; page-break-after: auto !important; }
+        thead th { background: #fff !important; color: #000 !important; border: 1px solid #444 !important; padding: 4px !important; }
+        tbody td { border: 1px solid #444 !important; color: #000 !important; padding: 4px !important; background: transparent !important; }
         
-        /* Print Summary Styles */
-        .print-summary { display: block !important; margin-bottom: 30px; page-break-after: avoid; }
-        .ps-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
-        .ps-logo-text { font-size: 24pt; font-weight: 900; color: #0f172a; }
-        .ps-logo-sub { font-size: 10pt; color: #64748b; letter-spacing: 2px; }
-        .ps-title-main { font-size: 16pt; font-weight: 800; text-align: center; margin: 10px 0; color: #1e293b; }
-        .ps-date { font-size: 9pt; color: #64748b; text-align: left; }
-        .ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 20px; }
-        .ps-section-title { font-size: 11pt; font-weight: 800; background: #f8fafc; padding: 5px 10px; border-right: 4px solid #14b8a6; margin-bottom: 10px; }
-        .ps-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .ps-table th, .ps-table td { border-bottom: 1px solid #e2e8f0; padding: 5px 8px; font-size: 9pt; text-align: right; }
-        .ps-table th { color: #64748b; font-weight: 600; width: 60%; }
-        .ps-table td { font-weight: 800; color: #0f172a; }
-        .ps-footer { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
-        .ps-sig-box { border-top: 1px dashed #cbd5e1; padding-top: 10px; text-align: center; font-size: 9pt; color: #64748b; }
-        
-        /* Table Fidelity */
-        tbody tr:nth-child(even) { background: #f8fafc !important; -webkit-print-color-adjust: exact; }
+        /* Remove ALL colors and formatting from print output */
+        .match-tag, .st-ok, .st-no, .diff-pos, .diff-neg, .diff-zero { color: #000 !important; background: none !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-weight: normal !important; text-shadow: none !important; }
+        .reason-hint, .diff-diag, .b-ref { color: #222 !important; font-size: 8pt !important; }
+        .guest-badge, .avail-in-group, .price-val { color: #000 !important; }
+        .d-box { background: none !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
+        .d-line { border: none !important; padding: 0 !important; margin: 0 !important; background: transparent !important; }
+        .d-dot { display: none !important; }
+        .txt-b, .txt-n { color: #000 !important; font-weight: normal !important; text-shadow: none !important; }
+        tbody tr:nth-child(even), tbody tr:nth-child(odd) { background: transparent !important; }
+        .b-name { color: #000 !important; font-weight: bold !important; font-size: 9pt !important; }
     }
 
     /* Custom Transitions */
@@ -325,16 +326,20 @@ class BookingNazeelComparePage {
     <div class="upload-box">
         <div class="drop-grid">
             <label class="drop-zone" id="dz-naz">
-                <i class="fas fa-file-invoice" style="color:var(--bn-accent)"></i>
-                <h3>نزيل (Guests)</h3>
-                <input accept=".xlsx,.xls,.csv" id="nazeelFile" type="file"/>
+                <i class="fas fa-file-invoice" style="color:var(--bn-accent); font-size: 2.5rem;"></i>
+                <h3 style="margin: 15px 0 5px;">نزيل (Guests)</h3>
+                <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">أكسيل مقروء</span>
+                <div class="dz-btn">تصفح الملف...</div>
+                <input accept=".xlsx,.xls,.csv" id="nazeelFile" type="file" style="display:none;"/>
                 <div class="upload-progress" id="progress-naz"></div>
                 <div class="success-flash-overlay" id="flash-naz"></div>
             </label>
             <label class="drop-zone" id="dz-book">
-                <i class="fas fa-passport" style="color:var(--bn-primary)"></i>
-                <h3>بوكينج (Booking)</h3>
-                <input accept=".xlsx,.xls,.csv" id="bookingFile" type="file"/>
+                <i class="fas fa-passport" style="color:var(--bn-primary); font-size: 2.5rem;"></i>
+                <h3 style="margin: 15px 0 5px;">بوكينج (Booking)</h3>
+                <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">أكسيل الكشف</span>
+                <div class="dz-btn">تصفح الملف...</div>
+                <input accept=".xlsx,.xls,.csv" id="bookingFile" type="file" style="display:none;"/>
                 <div class="upload-progress" id="progress-book"></div>
                 <div class="success-flash-overlay" id="flash-book"></div>
             </label>
@@ -1087,71 +1092,8 @@ class BookingNazeelComparePage {
             }
 
             // ملء الملخص المحاسبي عند الطباعة
-            window.buildPrintSummary = function () {
-                var el = document.getElementById('printSummary');
-                if (!el) return;
-                var st = window.lastStats;
-                if (!st || !st.s) {
-                    el.innerHTML = '<div class="ps-title-main">تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج</div><p class="ps-date">لم يتم تشغيل التحليل بعد.</p>';
-                    return;
-                }
-                var s = st.s, sub = st.sub;
-                var revB = (typeof s.revB === 'number') ? s.revB.toLocaleString() : String(s.revB || 0);
-                var revN = (typeof s.revN === 'number') ? s.revN.toLocaleString() : String(s.revN || 0);
-                var diff = (typeof s.revN === 'number' && typeof s.revB === 'number') ? (s.revN - s.revB).toLocaleString() : String((s.revN || 0) - (s.revB || 0));
-                var dateStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-                el.innerHTML = `
-                    <div class="ps-header">
-                        <div class="ps-logo-wrap">
-                            <div class="ps-logo-text">ADORA</div>
-                            <div class="ps-logo-sub">QUANTUM AUDIT LAYER</div>
-                        </div>
-                        <div class="ps-date">تاريخ التقرير: ${dateStr}</div>
-                    </div>
-                    
-                    <div class="ps-title-main">تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج</div>
-                    
-                    <div class="ps-grid">
-                        <div class="ps-col">
-                            <div class="ps-section-title">أ) ملخص الحالة (تحليل الكم)</div>
-                            <table class="ps-table">
-                                <tr><th>إجمالي الحجوزات (فريد)</th><td>${s.book || 0}</td></tr>
-                                <tr><th>مؤكد (بوكينج)</th><td>${sub.ok || 0}</td></tr>
-                                <tr><th>مطابق (وجود في نزيل)</th><td>${s.match || 0}</td></tr>
-                                <tr><th>تجميع / غرف محولة</th><td>${s.group || 0}</td></tr>
-                                <tr><th>بصمة السعر / تمديد</th><td>${s.money || 0}</td></tr>
-                                <tr><th>تسكين (رغم الإلغاء)</th><td>${s.recover || 0}</td></tr>
-                                <tr style="background:#fff1f2"><th>لم يحضر (لا تدفع عمولة)</th><td>${s.miss || 0}</td></tr>
-                            </table>
-                        </div>
-                        <div class="ps-col">
-                            <div class="ps-section-title">ب) الملخص المالي (مراجعة الإيراد)</div>
-                            <table class="ps-table">
-                                <tr><th>إيراد بوكينج (للمطابق)</th><td>${revB} ر.س</td></tr>
-                                <tr><th>إيراد نزيل (للمطابق)</th><td>${revN} ر.س</td></tr>
-                                <tr style="border-top:2px solid #0f172a">
-                                    <th>فرق الإيراد (الصافي)</th>
-                                    <td class="${(s.revN - s.revB) >= 0 ? 'diff-pos' : 'diff-neg'}">${diff} ر.س</td>
-                                </tr>
-                            </table>
-                            <div style="font-size:7.5pt; color:#64748b; margin-top:10px; line-height:1.4">
-                                * ملاحظة: الفرق الموجب يعني زيادة إيراد في نزيل عن بوكينج. 
-                                <br> * لم يحضر = حجز مؤكد في بوكينج لم يتم العثور عليه في نزيل.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="ps-footer">
-                        <div class="ps-sig-box">توقيع مراجع الحسابات</div>
-                        <div class="ps-sig-box">اعتماد الإدارة المالي</div>
-                    </div>
-                `;
-            };
-            if (!window._printSummaryBound) {
-                window.addEventListener('beforeprint', function () { if (window.buildPrintSummary) window.buildPrintSummary(); });
-                window._printSummaryBound = true;
-            }
+            // تم تعطيل الملخص المحاسبي عند الطباعة ليكون التقرير ضيقاً فقط
+            window.buildPrintSummary = function () { };
 
             // تحميل ملفات المشروع تلقائياً عند ?loadSample=1 (للمراجعة والاختبار)
             if (typeof window.location !== 'undefined' && window.location.search && window.location.search.indexOf('loadSample=1') !== -1) {
@@ -2008,7 +1950,12 @@ class BookingNazeelComparePage {
                 };
                 if (rep.type === "group" && !rep.n) {
                     let groupHead = filtered.find(function (r) { return r.type === "group" && r.n && window.normalize(r.bName) === window.normalize(rep.bName); });
-                    if (groupHead) displayRow.groupTotalNazeel = groupHead.nPrice;
+                    if (groupHead) {
+                        displayRow.groupTotalNazeel = groupHead.nPrice;
+                        if (groupHead.n && groupHead.n["إسم العميل"]) {
+                            displayRow.groupNazeelName = groupHead.n["إسم العميل"];
+                        }
+                    }
                 }
                 if (rep.type === "group" && rep.n) {
                     let sameName = filtered.filter(function (r) { return r.type === "group" && window.normalize(r.bName) === window.normalize(rep.bName); });
@@ -2026,18 +1973,18 @@ class BookingNazeelComparePage {
                 if (isGroupSub) tr.classList.add("row-group-sub");
 
                 let tag = "";
-                if (row.type === "ref") tag = `<span class="match-tag mt-ok">🆔 مرجع</span>`;
-                else if (row.type === "name") tag = `<span class="match-tag mt-ok">✨ اسم</span>`;
-                else if (row.type === "reversed") tag = `<span class="match-tag mt-ok" title="عكس الاسم (أول↔ثاني)">✨ اسم (عكس)</span>`;
-                else if (row.type === "ai") tag = `<span class="match-tag mt-ok" style="background:#e8eaf6;color:#5c6bc0;border:1px solid #9fa8da;">🤖 AI</span>`;
-                else if (row.type === "alias") tag = `<span class="match-tag mt-alias">🧠 ذاكرة</span>`;
-                else if (row.type === "money") tag = `<span class="match-tag mt-warn">💰 بصمة</span>`;
-                else if (row.type === "guess") tag = `<span class="match-tag mt-guess">🧩 تخمين ذكي</span>`;
-                else if (row.type === "extension") tag = `<span class="match-tag mt-ext">🟡 تمديد إقامة</span>`;
-                else if (row.type === "group") tag = `<span class="match-tag mt-grp">🔗 تجميع</span>${row.amountVerified ? ' <span class="match-tag mt-ok" style="font-size:0.65rem" title="مجموع نزيل قريب جداً من بوكينج — تأكيد بالمبلغ">✓ تأكيد بالمبلغ</span>' : ''}`;
-                else if (row.type === "multi") tag = `<span class="match-tag mt-grp" title="حجز واحد → إقامتان نزيل (غرفتان)">🛏️ غرفتان</span>${row.amountVerified ? ' <span class="match-tag mt-ok" style="font-size:0.65rem" title="مجموع نزيل قريب جداً من بوكينج — تأكيد بالمبلغ">✓ تأكيد بالمبلغ</span>' : ''}`;
-                else if (row.type === "conflict") tag = `<span class="match-tag mt-err">⚠️ تسكين</span>`;
-                else tag = `<span class="match-tag mt-miss">❌ مفقود</span>`;
+                if (row.type === "ref") tag = `<span class="match-tag mt-ok">مرجع</span>`;
+                else if (row.type === "name") tag = `<span class="match-tag mt-ok">اسم</span>`;
+                else if (row.type === "reversed") tag = `<span class="match-tag mt-ok" title="عكس الاسم (أول↔ثاني)">اسم (عكس)</span>`;
+                else if (row.type === "ai") tag = `<span class="match-tag mt-ok" style="background:#e8eaf6;color:#5c6bc0;border:1px solid #9fa8da;">AI</span>`;
+                else if (row.type === "alias") tag = `<span class="match-tag mt-alias">ذاكرة</span>`;
+                else if (row.type === "money") tag = `<span class="match-tag mt-warn">بصمة</span>`;
+                else if (row.type === "guess") tag = `<span class="match-tag mt-guess">تخمين ذكي</span>`;
+                else if (row.type === "extension") tag = `<span class="match-tag mt-ext">تمديد إقامة</span>`;
+                else if (row.type === "group") tag = `<span class="match-tag mt-grp">تجميع</span>${row.amountVerified ? ' <span class="match-tag mt-ok" style="font-size:0.65rem" title="مجموع نزيل قريب جداً من بوكينج — تأكيد بالمبلغ">✓</span>' : ''}`;
+                else if (row.type === "multi") tag = `<span class="match-tag mt-grp" title="حجز واحد → إقامتان نزيل (غرفتان)">غرفتان</span>${row.amountVerified ? ' <span class="match-tag mt-ok" style="font-size:0.65rem" title="مجموع نزيل قريب جداً من بوكينج — تأكيد بالمبلغ">✓</span>' : ''}`;
+                else if (row.type === "conflict") tag = `<span class="match-tag mt-err">تسكين</span>`;
+                else tag = `<span class="match-tag mt-miss">مفقود</span>`;
                 let conf = Number(row.matchConfidence || 0);
                 let confClass = conf >= 90 ? "conf-hi" : (conf >= 75 ? "conf-mid" : "conf-low");
                 let confTag = conf > 0 ? `<span class="conf-tag ${confClass}" title="درجة الثقة في الربط">${conf}%</span>` : "";
@@ -2089,7 +2036,7 @@ class BookingNazeelComparePage {
                     <td class="col-seq">${rowNumCell}</td>
                     <td><div class="b-name">${safeCell(row.bName)}${guestBadge}</div><div class="b-ref">${safeCell(bRefText)}</div></td>
                     <td>${stHtml}</td>
-                    <td>${row.n ? safeCell(row.n["إسم العميل"]) : "-"}</td>
+                    <td>${row.n ? safeCell(row.n["إسم العميل"]) : (row.groupNazeelName ? `<span style="opacity:0.6">${safeCell(row.groupNazeelName)}</span>` : "-")}</td>
                     <td>${tag}${confTag}${act}</td>
                     <td><span class="price-val">${row.bPrice.toFixed(0)}</span></td>
                     <td>${nPriceCell}</td>
@@ -2200,58 +2147,82 @@ class BookingNazeelComparePage {
 
         window.exportExcel = function () {
             const wb = XLSX.utils.book_new();
-            var st = window.lastStats;
-            if (st && st.s) {
-                var s = st.s, sub = st.sub;
-                var revB = typeof s.revB === 'number' ? s.revB : 0;
-                var revN = typeof s.revN === 'number' ? s.revN : 0;
-                var diff = revN - revB;
-                var dateStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-                var summaryData = [
-                    ["تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج"],
-                    ["تاريخ التقرير:", dateStr],
-                    [],
-                    ["أ) ملخص الحجوزات", ""],
-                    ["إجمالي الحجوزات (فريد)", s.book || 0],
-                    ["مؤكد", sub.ok || 0],
-                    ["ملغي", sub.can || 0],
-                    ["NoShow (في الملف)", sub.nos || 0],
-                    ["مطابق (مرجع / اسم / ذاكرة)", s.match || 0],
-                    ["تجميع / غرفتان", s.group || 0],
-                    ["بصمة / تمديد", s.money || 0],
-                    ["تسكين (إلغاء)", s.recover || 0],
-                    ["لم يحضر (لا عمولة)", s.miss || 0],
-                    [],
-                    ["ب) الملخص المالي", ""],
-                    ["إيراد بوكينج (المطابق)", revB],
-                    ["إيراد نزيل (المطابق)", revN],
-                    ["الفرق (نزيل − بوكينج)", diff],
-                ];
-                var wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-                XLSX.utils.book_append_sheet(wb, wsSummary, "ملخص");
-            }
 
-            // إنشاء ورقة التفاصيل من البيانات المفلترة مباشرة لضمان نظافة البيانات
+            // دالة خفيفة لمسح الإيموجي من النصوص عند التصدير
+            const stripEmoji = (str) => {
+                if (!str) return '';
+                return String(str).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+            };
+
             const filtered = window.getFilteredRows();
-            const detailHeader = ["#", "الاسم (Booking)", "الحالة", "الاسم (Nazeel)", "نوع الربط", "مبلغ بوكينج", "مبلغ نزيل", "الفرق", "التواريخ"];
+            const detailHeader = [
+                "#", "اسم ضيف بوكينج", "رقم حجز بوكينج", "الحالة", "اسم ضيف نزيل",
+                "نوع الربط", "مبلغ بوكينج", "مبلغ نزيل", "الفرق المالي", "حالة الفرق",
+                "تواريخ الإقامة بوكينج", "تواريخ الإقامة نزيل"
+            ];
+
             const detailRows = filtered.map((row, i) => {
-                const dates = 'B: ' + (row.b["تسجيل الوصول"] || '-') + ' -> ' + (row.b["تسجيل المغادرة"] || '-') + ' | N: ' + (row.n ? (row.n["تسجيل الدخول"] || '-') + ' -> ' + (row.n["تسجيل الخروج"] || '-') : '-');
+                const bDates = row.b["تسجيل الوصول"] || row.b["تسجيل المغادرة"] ? ('من ' + (row.b["تسجيل الوصول"] || '-') + ' إلى ' + (row.b["تسجيل المغادرة"] || '-')) : '-';
+                const nDates = row.n ? ('من ' + (row.n["تاريخ الدخول"] || '-') + ' إلى ' + (row.n["تاريخ الخروج"] || '-')) : '-';
+
+                let bRefVal = row.b["رقم الحجز"] || row.b["رقم مرجع الحجز"] || row.b["مرجع الحجز"] || row.b["Booking ID"] || "";
+                let bNameInfo = stripEmoji(row.bName || '');
+
+                let tagText = "";
+                if (row.type === "ref") tagText = "مرجع";
+                else if (row.type === "name") tagText = "اسم";
+                else if (row.type === "reversed") tagText = "اسم (عكس)";
+                else if (row.type === "ai") tagText = "AI";
+                else if (row.type === "alias") tagText = "ذاكرة";
+                else if (row.type === "money") tagText = "بصمة";
+                else if (row.type === "guess") tagText = "تخمين ذكي";
+                else if (row.type === "extension") tagText = "تمديد إقامة";
+                else if (row.type === "group") tagText = "تجميع";
+                else if (row.type === "multi") tagText = "غرفتان";
+                else if (row.type === "conflict") tagText = "تسكين";
+                else tagText = "مفقود";
+
+                let rReason = stripEmoji(row.matchReason || "");
+                let linkStr = tagText + (row.matchConfidence ? " " + row.matchConfidence + "%" : "") + (rReason ? " | " + rReason : "");
+
+                let diff = row.n ? (row.nPrice - row.bPrice) : 0;
+                let taxMultiplier = 1;
+                const taxValEl = document.getElementById('taxVal');
+                const muniValEl = document.getElementById('muniVal');
+                if (taxValEl && muniValEl) {
+                    taxMultiplier = 1 + (parseFloat(taxValEl.value || 0) / 100) + (parseFloat(muniValEl.value || 0) / 100);
+                }
+                let diffDiag = row.n && row.type !== 'conflict' && row.type !== 'miss' ? window.getDiffDiagnosis(diff, row.bPriceNet, taxMultiplier) : "";
+
+                let nNameCell = row.n ? (row.n["إسم العميل"] || '-') : '-';
+                if (!row.n && row.type === "group") {
+                    let groupHead = filtered.find(function (r) { return r.type === "group" && r.n && window.normalize(r.bName) === window.normalize(row.bName); });
+                    if (groupHead && groupHead.n) nNameCell = groupHead.n["إسم العميل"] || '-';
+                }
+
                 return [
                     i + 1,
-                    row.bName,
-                    row.status || (row.isOk ? 'Confirmed' : 'Cancelled'),
-                    row.n ? row.n["إسم العميل"] : '-',
-                    row.matchReason,
-                    row.bPrice,
-                    row.nPrice,
-                    row.nPrice - row.bPrice,
-                    dates
+                    bNameInfo,
+                    bRefVal,
+                    row.status || (row.isOk ? 'مؤكد' : 'ملغي'),
+                    stripEmoji(nNameCell),
+                    linkStr,
+                    row.bPrice != null ? Number(row.bPrice) : '-',
+                    row.nPrice != null ? Number(row.nPrice) : '-',
+                    row.n ? Number(diff) : '-',
+                    diffDiag,
+                    bDates,
+                    nDates
                 ];
             });
 
             const wsDetail = XLSX.utils.aoa_to_sheet([detailHeader, ...detailRows]);
-            XLSX.utils.book_append_sheet(wb, wsDetail, "التفاصيل");
-            XLSX.writeFile(wb, "Adora_Report.xlsx");
+            wsDetail['!cols'] = [
+                { wch: 5 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 20 }
+            ];
+
+            XLSX.utils.book_append_sheet(wb, wsDetail, "تقرير التحليل");
+            XLSX.writeFile(wb, "تقرير_المطابقة_التحليلي.xlsx");
         };
 
         // اختبار منطق المطابقة (لم يحضر) — يظهر عند فتح الصفحة مع ?test=1
