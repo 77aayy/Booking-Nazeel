@@ -107,10 +107,18 @@ class BookingNazeelComparePage {
         border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer;
         transition: 0.3s; position: relative; overflow: hidden;
     }
-    .drop-zone:hover { border-color: var(--bn-primary); background: rgba(20,184,166,0.05); transform: translateY(-5px); }
-    .drop-zone i { font-size: 3rem; margin-bottom: 15px; display: block; }
-    .drop-zone h3 { font-size: 1.1rem; margin-bottom: 5px; }
-    .drop-zone input { display: none; }
+    .drop-zone.file-loaded { border-color: #10b981; background: rgba(16, 185, 129, 0.05); border-style: solid; animation: q-pulse-success 1.5s ease-out; }
+    .drop-zone.file-loaded i { color: #10b981 !important; transform: scale(1.1); }
+    .drop-zone.file-loaded h3 { color: #10b981; }
+    
+    @keyframes q-pulse-success {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .upload-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--bn-primary); width: 0; transition: 0.2s; }
+    .drop-zone h3 span.file-name { display: block; font-size: 0.8rem; color: #14b8a6; margin-top: 5px; opacity: 0.9; }
 
     .control-panel { max-width: 900px; margin: 0 auto 20px; display: flex; justify-content: center; }
     .tax-settings { display: flex; align-items: center; gap: 20px; background: var(--bn-card); padding: 10px 25px; border-radius: 50px; border: 1px solid var(--bn-border); }
@@ -193,13 +201,35 @@ class BookingNazeelComparePage {
     }
 
     @media print {
-        .app-header, .hero-card, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay { display: none !important; }
-        .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; }
-        .table-responsive { border: none; }
-        table { border: 1px solid #ddd; }
-        thead th { background: #f9f9f9 !important; color: #000 !important; }
-        tbody td { border: 1px solid #eee; color: #000 !important; }
-        .match-tag { border: 1px solid #ddd; background: #fff; }
+        .app-header, .hero-card, .control-panel, .filter-pills, .search-box, .header-tools, .btn-mini, .bm-merge, .quantum-loader-overlay, .loader-perf, .perf-summary { display: none !important; }
+        .booking-nazeel-page-wrapper { background: #fff !important; color: #000 !important; padding: 0 !important; }
+        .results-wrap { max-width: 100% !important; padding: 0 !important; }
+        .table-responsive { border: none !important; overflow: visible !important; }
+        table { border-collapse: collapse !important; width: 100% !important; font-size: 8.5pt !important; }
+        thead th { background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; -webkit-print-color-adjust: exact; }
+        tbody td { border: 1px solid #e2e8f0 !important; color: #000 !important; padding: 6px 4px !important; }
+        .match-tag { border: 1px solid #ddd !important; background: #fff !important; color: #333 !important; padding: 2px 5px !important; }
+        .diff-pos { color: #059669 !important; font-weight: 700 !important; }
+        .diff-neg { color: #dc2626 !important; font-weight: 700 !important; }
+        
+        /* Print Summary Styles */
+        .print-summary { display: block !important; margin-bottom: 30px; page-break-after: avoid; }
+        .ps-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
+        .ps-logo-text { font-size: 24pt; font-weight: 900; color: #0f172a; }
+        .ps-logo-sub { font-size: 10pt; color: #64748b; letter-spacing: 2px; }
+        .ps-title-main { font-size: 16pt; font-weight: 800; text-align: center; margin: 10px 0; color: #1e293b; }
+        .ps-date { font-size: 9pt; color: #64748b; text-align: left; }
+        .ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 20px; }
+        .ps-section-title { font-size: 11pt; font-weight: 800; background: #f8fafc; padding: 5px 10px; border-right: 4px solid #14b8a6; margin-bottom: 10px; }
+        .ps-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .ps-table th, .ps-table td { border-bottom: 1px solid #e2e8f0; padding: 5px 8px; font-size: 9pt; text-align: right; }
+        .ps-table th { color: #64748b; font-weight: 600; width: 60%; }
+        .ps-table td { font-weight: 800; color: #0f172a; }
+        .ps-footer { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
+        .ps-sig-box { border-top: 1px dashed #cbd5e1; padding-top: 10px; text-align: center; font-size: 9pt; color: #64748b; }
+        
+        /* Table Fidelity */
+        tbody tr:nth-child(even) { background: #f8fafc !important; -webkit-print-color-adjust: exact; }
     }
 
     /* Custom Transitions */
@@ -423,1402 +453,27 @@ class BookingNazeelComparePage {
 </div>
 
 <script>
-// --- IndexedDB Functions (V18.0) ---
-function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open('AdoraMatchDB', 1);
-
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains('aliases')) {
-                db.createObjectStore('aliases', { keyPath: 'bName' });
-            }
-        };
-
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            resolve(db);
-        };
-
-        request.onerror = (e) => {
-            // IndexedDB error - reject silently
-            reject(e.target.error);
-        };
-    });
-}
-
-function saveAlias(bName, nName) {
-    if(!db) return;
-    const transaction = db.transaction(['aliases'], 'readwrite');
-    const store = transaction.objectStore('aliases');
-    store.put({ bName: normalize(bName), nName: normalize(nName) });
-}
-
-function getAlias(bName) {
-    return new Promise((resolve, reject) => {
-        if(!db) { resolve(null); return; }
-        const transaction = db.transaction(['aliases'], 'readonly');
-        const store = transaction.objectStore('aliases');
-        const request = store.get(normalize(bName));
-        
-        request.onsuccess = (e) => {
-            resolve(e.target.result);
-        };
-
-        request.onerror = (e) => {
-            console.error("Error retrieving alias:", e.target.error);
-            resolve(null);
-        };
-    });
-}
-// --- End IndexedDB Functions ---
-
-
-// AI Levenshtein
-function levenshtein(a, b) {
-    const matrix = [];
-    for(let i=0; i<=b.length; i++) matrix[i] = [i];
-    for(let j=0; j<=a.length; j++) matrix[0][j] = j;
-    for(let i=1; i<=b.length; i++) {
-        for(let j=1; j<=a.length; j++) {
-            if(b.charAt(i-1)==a.charAt(j-1)) matrix[i][j] = matrix[i-1][j-1];
-            else matrix[i][j] = Math.min(matrix[i-1][j-1]+1, Math.min(matrix[i][j-1]+1, matrix[i-1][j]+1));
-        }
-    }
-    return matrix[b.length][a.length];
-}
-
-function safeSet(id, v){ if(document.getElementById(id)) document.getElementById(id).textContent = v; }
-function cleanPrice(v) { return parseFloat(String(v||0).replace(/[^0-9.]/g, "").replace(",", ".")) || 0; }
-
-// تسامح متوقع مع أخطاء الموظف: أسماء مختلفة، تاريخ بوكينج 1 يناير ونزيل 2 يناير، أخطاء في رقم الحجز
-var DATE_TOLERANCE_DAYS_NAME = 2;   // بوكينج يوم 1 ونزيل يوم 2 → نفس الضيف
-var DATE_TOLERANCE_DAYS_GROUP = 3;
-var DATE_TOLERANCE_DAYS_GUESS = 2;
-var DATE_TOLERANCE_DAYS_EXT = 2;
-var PRICE_TOLERANCE_NAME = 15;      // تقريب/ضريبة مختلفة
-var PRICE_TOLERANCE_GROUP = 15;
-var PRICE_TOLERANCE_GUESS = 8;     // أوسع من 3 لتفادي مفقود بسبب خطأ بسيط
-var PRICE_TOLERANCE_EXT = 20;
-
-function normalize(s) {
-    s = String(s||"");
-    if(s.includes(",")) s = s.split(",").map(function(p){return p.trim();}).reverse().join(" ");
-    return s.toLowerCase()
-        .replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
-        .replace(/al-/g, "").replace(/al /g, "").replace(/bin /g, "").replace(/abu /g, "")
-        .replace(/mr /g, "").replace(/mrs /g, "")
-        .replace(/[^\w\u0600-\u06FF]/g," ").replace(/\s+/g, " ").trim();
-}
-
-// V19.0: Gemini AI for cross-language/phonetic name matching
-// SECURITY: Never hardcode API keys. Use backend proxy or Firebase Cloud Functions.
-// Set window.GEMINI_API_KEY at runtime (e.g. from env) — or callAI returns null.
-var GEMINI_API_KEY = (typeof window !== 'undefined' && window.GEMINI_API_KEY) ? window.GEMINI_API_KEY : '';
-async function callAI(guestName, candidatePool) {
-    if (!GEMINI_API_KEY) return null;
-    try {
-        var res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: 'IS GUEST "' + guestName + '" THE SAME PERSON AS ANY IN THIS LIST (PHONETIC/CROSS-LANGUAGE)? [' + candidatePool.join(',') + ']. JSON ONLY: {"match":true, "name":"ExactNameFromList"} or {"match":false}' }] }]
-            })
-        });
-        var d = await res.json();
-        var text = d.candidates[0].content.parts[0].text;
-        var jsonMatch = text.match(/\{.*\}/s);
-        if (jsonMatch) return JSON.parse(jsonMatch[0]);
-        return null;
-    } catch(e) { return null; }
-}
-// مرجع رقم الحجز: الموظف قد يغلط (رقم ناقص، زائد، حرف) — نسمح بتطابق يتضمن أو ليفنشتاين صغير
-function refMatch(bRef, nRef) {
-    var b = String(bRef||"").trim();
-    var n = String(nRef||"").trim();
-    if (!b || !n) return false;
-    if (n.indexOf(b) !== -1 || b.indexOf(n) !== -1) return true;
-    if (b.length <= 12 && n.length <= 12 && levenshtein(b, n) <= 2) return true;
-    return false;
-}
-
-function parseDate(v) {
-    if(!v && v!==0) return null;
-    if(typeof v === 'number') return new Date((v - 25569)*86400000);
-    if(typeof v === 'string') {
-        if(v.includes('-')) { let p = v.split(' ')[0].split('-'); if(p[0].length===4) return new Date(p[0],p[1]-1,p[2]); return new Date(p[2],p[1]-1,p[0]); }
-        if(v.includes('/')) { let p = v.split(' ')[0].split('/'); if(p[0].length===4) return new Date(p[0],p[1]-1,p[2]); return new Date(p[2],p[1]-1,p[0]); }
-    }
-    return null;
-}
-function toENDateStr(d) { if(!d) return "-"; return d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit'}); }
-// كلمات الاسم للمقارنة. نضمّن كلمات طولها 2 إذا الاسم كلمتان أو أكثر حتى لا نربط على كلمة واحدة فقط (مثل Saws Ka → هادي عندما تُستبعد "ka" فتبقى "saws" فقط)
-function getParts(name) {
-    var parts = normalize(name).split(" ").filter(Boolean);
-    // دمج "عبد" + "الملك" / "الله" / "الرحمن" لتمكين SAUD ABDULMALIK ↔ سعود عبد الملك
-    var merged = [];
-    for (var i = 0; i < parts.length; i++) {
-        if (parts[i] === "عبد" && i + 1 < parts.length && (parts[i + 1] === "الملك" || parts[i + 1] === "الله" || parts[i + 1] === "الرحمن")) {
-            merged.push(parts[i] + " " + parts[i + 1]);
-            i++;
-        } else merged.push(parts[i]);
-    }
-    parts = merged;
-    var long = parts.filter(x => x.length > 2);
-    if (long.length >= 2) return long;
-    if (parts.length >= 2 && long.length <= 1) return parts;
-    return long.length ? long : parts;
-}
-
-// تحويل عربي → لاتيني ديناميكي (ينطبق على أي ملف/أسماء مستقبلاً)
-var AR_TO_LAT = { 'ا':'a','أ':'a','آ':'a','إ':'a','ئ':'y','ؤ':'w','ء':'',
-    'ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z',
-    'س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q',
-    'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','و':'w','ي':'y','ى':'y','ة':'h','ڤ':'v' };
-function isArabicWord(w) {
-    if (!w || typeof w !== 'string') return false;
-    for (var i = 0; i < w.length; i++) { if (w.charCodeAt(i) >= 0x0600 && w.charCodeAt(i) <= 0x06FF) return true; }
-    return false;
-}
-function transliterateToLatin(w) {
-    if (!w || typeof w !== 'string') return '';
-    var out = '';
-    for (var i = 0; i < w.length; i++) {
-        var c = w[i];
-        out += AR_TO_LAT[c] !== undefined ? AR_TO_LAT[c] : (c.charCodeAt(0) >= 0x0600 && c.charCodeAt(0) <= 0x06FF ? '' : c);
-    }
-    return out.replace(/\s+/g, ' ').trim();
-}
-
-// القاعدة: أمثلة المستخدم (غفران الحسني↔Ghufran، SAUD↔سعود عبد الملك، مشبب البراء↔البراء مشبب) تُستخدم لتعديل القاعدة وليس لحل الاسم فقط.
-// مرادفات عربي↔لاتيني = أنماط. عكس ترتيب الاسم (مشبب البراء في بوكينج ↔ البراء مشبب في نزيل) مغطى بمرحلة "نفس الكلمات/عكس" وتطابق صارم أول/آخر.
-var COMMON_NAME_EQUIVALENTS = [
-    { ar: "محمد", lat: ["mohammed", "muhammad", "mohamed", "mhmd", "mohamad"] },
-    { ar: "عبدالله", lat: ["abdullah", "abdallah", "abdalla"] },
-    { ar: "سعود", lat: ["saud"] },
-    { ar: "عبدالملك", lat: ["abdulmalik", "abdul malik", "abdulmalek"] },
-    { ar: "عبد الملك", lat: ["abdulmalik", "abdul malik"] },
-    { ar: "الملك", lat: ["malik", "malek"] },
-    { ar: "ابراهيم", lat: ["ibrahim", "ebrahem", "abrahim", "ibrahem"] },
-    { ar: "الصاعدي", lat: ["alsaedi", "alsedi", "alsaady", "alsaadi", "alsaedy", "alsaidi"] },
-    { ar: "صاعدي", lat: ["alsaedi", "alsedi", "alsaady", "alsaadi"] },
-    { ar: "الغامدي", lat: ["ghamdi", "ghamdy", "alghamdi", "alghamdy"] },
-    { ar: "غامدي", lat: ["ghamdi", "ghamdy"] },
-    { ar: "أحمد", lat: ["ahmed", "ahmad"] },
-    { ar: "علي", lat: ["ali", "aly"] },
-    { ar: "هدى", lat: ["huda", "hoda"] },
-    { ar: "هبه", lat: ["hebatalla", "heba", "haba", "hebatallah"] },
-    { ar: "الساعي", lat: ["elsaey", "alsaey", "elsaei", "alsaiei", "alsaay"] },
-    { ar: "ساعي", lat: ["elsaey", "alsaey", "elsaei", "alsaiei"] },
-    { ar: "العنزي", lat: ["alanazi", "al anazi", "alnazi"] },
-    { ar: "عنزي", lat: ["alanazi", "al anazi"] },
-    { ar: "العسيري", lat: ["alasiri", "al asiri", "alasiry", "al asiry"] },
-    { ar: "عسيري", lat: ["alasiri", "al asiri"] },
-    { ar: "صالح", lat: ["saleh", "salah"] },
-    { ar: "السلمي", lat: ["sulami", "alsulami", "al sulami"] },
-    { ar: "سلمي", lat: ["sulami"] },
-    { ar: "هادي", lat: ["hadi"] },
-    { ar: "زاهر", lat: ["zaher", "zaheer"] },
-    { ar: "البراء", lat: ["albaraa", "albara", "baraa", "bara"] },
-    { ar: "مشبب", lat: ["mushabbab", "meshabbab", "meshabab"] },
-    { ar: "يعقوب", lat: ["yaqub", "yacoub", "yagoub", "yaqoub"] },
-    { ar: "الصيني", lat: ["alsini", "al sini", "alsiney", "sini"] },
-    { ar: "صيني", lat: ["alsini", "sini"] },
-    { ar: "طه", lat: ["taha"] },
-    { ar: "الكليدار", lat: ["alkillidar", "al killidar", "killidar"] },
-    { ar: "عبدالمجيد", lat: ["abdulmajeed", "abdul majeed", "abdulmajid"] },
-    { ar: "الطويرقي", lat: ["altowairqi", "al towairqi", "towairqi", "altuwairqi"] },
-    { ar: "طويرقي", lat: ["altowairqi", "towairqi"] },
-    { ar: "ماجد", lat: ["majed", "maged"] },
-    { ar: "امجد", lat: ["amjad", "majed", "maged"] },
-    { ar: "الزامل", lat: ["alzamil", "al zamil", "zamil"] },
-    { ar: "زامل", lat: ["alzamil", "zamil"] },
-    { ar: "إيمان", lat: ["imen", "iman", "imane"] },
-    { ar: "غفران", lat: ["ghufran", "gufran"] },
-    { ar: "الحسني", lat: ["hussein", "hussain", "husain", "alhusaini", "alhussaini"] },
-    { ar: "حسني", lat: ["hussein", "hussain", "husain"] },
-    { ar: "شاوش", lat: ["chaouch", "chaouech", "chaouche"] },
-    { ar: "عاثر", lat: ["atheer", "ather"] },
-    { ar: "المتير", lat: ["almutaire", "al mutaire", "almutairi", "mutaire"] },
-    { ar: "متير", lat: ["almutaire", "mutaire"] },
-    { ar: "موضي", lat: ["modhi", "moudhi", "mody"] },
-    { ar: "العازمي", lat: ["alazmi", "al azmi", "alazemi"] },
-    { ar: "عازمي", lat: ["alazmi", "azmi"] },
-    { ar: "بينايان", lat: ["binayan", "binian"] },
-    { ar: "ابونايف", lat: ["abonayef", "abunayef", "abunaif"] },
-    { ar: "العتيبي", lat: ["alotibi", "al otaibi", "otibi", "otaibi"] },
-    { ar: "عتيبي", lat: ["alotibi", "otibi"] },
-    { ar: "العالم", lat: ["alam", "alalam"] },
-    { ar: "حنان", lat: ["hanan"] },
-    { ar: "رنا", lat: ["rana"] },
-    { ar: "سعد", lat: ["saad", "sad"] },
-    { ar: "ياسر", lat: ["yasser", "yaser"] },
-    { ar: "الشهراني", lat: ["alshahrani", "shahrani"] },
-    { ar: "الزهراني", lat: ["alzahrani", "zahrani"] },
-    { ar: "حمادة", lat: ["hamada", "hamad"] },
-    { ar: "حماد", lat: ["hamada", "hamad"] },
-    { ar: "عمر", lat: ["omara", "omar", "umara"] },
-    { ar: "الاحمدي", lat: ["alahmadi", "alahmady", "al ahmadi"] },
-    { ar: "احمدي", lat: ["alahmadi", "ahmadi"] },
-    { ar: "حسام", lat: ["hussam", "hossam", "husam"] },
-    { ar: "الديادي", lat: ["aldadi", "al dadi", "aldady"] },
-    { ar: "الدادي", lat: ["aldadi", "al dadi", "aldady"] },
-    { ar: "عبدالرحمن", lat: ["abdulrahman", "abdul rahman", "abdulrahman"] },
-    { ar: "سوسن", lat: ["sawsen", "sawsan", "saws"] },
-    { ar: "سوس", lat: ["saws"] },
-    { ar: "كلبوسي", lat: ["kalboussi", "kalbousi", "kalbusi"] },
-    { ar: "حسين", lat: ["hussein", "hussain", "husain"] },
-    { ar: "بدر", lat: ["bader", "badr"] },
-    { ar: "الرويلي", lat: ["alrwili", "al rwili", "alruwaili"] },
-    { ar: "رويلي", lat: ["alrwili", "rwili"] },
-    { ar: "حمزة", lat: ["hamzah", "hamza"] },
-    { ar: "عثمان", lat: ["othman", "osman", "uthman"] },
-    { ar: "خالد", lat: ["khalid", "khaled"] },
-    // الحالات المفقودة والربط الخاطئ (عمار، إسلام، الشهري، عبدالعزيز، اسامة، السحيمي)
-    { ar: "عمار", lat: ["ammar", "amar", "ammara"] },
-    { ar: "النخلي", lat: ["alnakhli", "al nakhli", "elnakhli", "nakhli"] },
-    { ar: "نخلي", lat: ["alnakhli", "nakhli"] },
-    { ar: "إسلام", lat: ["islam", "eslam"] },
-    { ar: "اسلام", lat: ["islam", "eslam"] },
-    { ar: "الديادي", lat: ["aldadi", "al dadi", "aldady", "ellaboudy", "elaboudy", "laboudy"] },
-    { ar: "الشهري", lat: ["alshehri", "al shehri", "alshahri", "alshihri", "shehri"] },
-    { ar: "شهري", lat: ["alshehri", "shehri"] },
-    { ar: "عبدالعزيز", lat: ["abdulaziz", "abdul aziz", "abdulazez"] },
-    { ar: "اسامة", lat: ["osama", "usama", "ossama"] },
-    { ar: "السحيمي", lat: ["alsuhaymi", "al suhaymi", "alsuhimi", "suhaymi", "alsuhymi"] },
-    { ar: "سحيمي", lat: ["alsuhaymi", "suhaymi"] }
-];
-
-// مقارنة كلمة بوكينج مع كلمة نزيل — ديناميكي: يطبّق على أي اسم في أي ملف (نقل حرفي عربي↔لاتيني + مرادفات أنماط + بادئة)
-function wordSimilarity(bp, np, maxDist) {
-    maxDist = maxDist === undefined ? 2 : maxDist;
-    // PERF/LOGIC: crossDist should scale with word length to avoid short words matching everything
-    var bpNorm = normalize(bp);
-    var npNorm = normalize(np);
-    var crossDist = Math.max(maxDist, Math.min(4, Math.floor(Math.max(bpNorm.length, npNorm.length) / 2) + 1));
-    if (bpNorm.length >= 3 && npNorm.length >= 3 && (npNorm.indexOf(bpNorm) === 0 || bpNorm.indexOf(npNorm) === 0)) return true;
-    if (levenshtein(bp, np) <= maxDist) return true;
-    for (var i = 0; i < COMMON_NAME_EQUIVALENTS.length; i++) {
-        var eq = COMMON_NAME_EQUIVALENTS[i];
-        var arMatch = (npNorm === eq.ar || npNorm.indexOf(eq.ar) === 0);
-        var latMatch = eq.lat.some(function(l) { return levenshtein(bpNorm, l) <= maxDist; });
-        if (arMatch && latMatch) return true;
-    }
-    if (isArabicWord(np)) {
-        var npLat = transliterateToLatin(np);
-        if (npLat) {
-            if (levenshtein(bpNorm, npLat) <= crossDist) return true;
-            if (npLat.length > 2 && npLat.substring(0, 2) === "al" && levenshtein(bpNorm, npLat.substring(2)) <= maxDist) return true;
-        }
-    }
-    if (isArabicWord(bp)) {
-        var bpLat = transliterateToLatin(bp);
-        if (bpLat) {
-            if (levenshtein(bpLat, npNorm) <= crossDist) return true;
-            if (bpLat.length > 2 && bpLat.substring(0, 2) === "al" && levenshtein(bpLat.substring(2), npNorm) <= maxDist) return true;
-        }
-    }
-    return false;
-}
-
-/** مطابقة صارمة للاسم الأول/الأخير فقط — مرادف معتمد أو ليفنشتاين 1 أو بادئة (طول≥3، أو 2 حرف إذا الطرف الآخر ≥5 مثل Ka→kalboussi) — تفادي Zaher↔ياسر، علي↔صالح */
-function wordSimilarityStrictFirstLast(bp, np) {
-    var bpNorm = normalize(bp);
-    var npNorm = normalize(np);
-    if (bpNorm.length >= 3 && npNorm.length >= 3 && (npNorm.indexOf(bpNorm) === 0 || bpNorm.indexOf(npNorm) === 0)) return true;
-    if (bpNorm.length >= 2 && npNorm.length >= 5 && npNorm.indexOf(bpNorm) === 0) return true;
-    if (npNorm.length >= 2 && bpNorm.length >= 5 && bpNorm.indexOf(npNorm) === 0) return true;
-    if (levenshtein(bpNorm, npNorm) <= 1) return true;
-    for (var i = 0; i < COMMON_NAME_EQUIVALENTS.length; i++) {
-        var eq = COMMON_NAME_EQUIVALENTS[i];
-        var arMatch = (npNorm === eq.ar || npNorm.indexOf(eq.ar) === 0) || (bpNorm === eq.ar || bpNorm.indexOf(eq.ar) === 0);
-        var latMatch = eq.lat.some(function(l) { return levenshtein(bpNorm, l) <= 1; }) || eq.lat.some(function(l) { return levenshtein(npNorm, l) <= 1; });
-        if (arMatch && latMatch) return true;
-    }
-    if (isArabicWord(np)) {
-        var npLat = transliterateToLatin(np);
-        if (npLat && levenshtein(bpNorm, npLat) <= 1) return true;
-    }
-    if (isArabicWord(bp)) {
-        var bpLat = transliterateToLatin(bp);
-        if (bpLat && levenshtein(bpLat, npNorm) <= 1) return true;
-    }
-    return false;
-}
-
-/** مثل twoWordMatchesFirstOrLast لكن بمطابقة صارمة (أول/آخر فقط) — لرفض ربط خاطئ مثل Zaher ALASIRI↔ياسر القحطاني، Rana Saad↔علي مشبب */
-function twoWordMatchesFirstOrLastStrict(bParts, nParts) {
-    if (!bParts.length || bParts.length !== 2 || !nParts.length) return false;
-    var first = 0, last = nParts.length - 1;
-    var b0First = wordSimilarityStrictFirstLast(bParts[0], nParts[first]);
-    var b0Last = wordSimilarityStrictFirstLast(bParts[0], nParts[last]);
-    var b1First = wordSimilarityStrictFirstLast(bParts[1], nParts[first]);
-    var b1Last = wordSimilarityStrictFirstLast(bParts[1], nParts[last]);
-    return (b0First || b0Last) && (b1First || b1Last);
-}
-
-function guessNameOverlap(bParts, nParts) {
-    if (!bParts.length || !nParts.length) return false;
-    // LOGIC: If the booking name is very short (e.g. "H VIP"), require a stronger similarity (maxDist 2)
-    var isShortName = bParts.join("").length <= 4;
-    var matchDist = isShortName ? 2 : 3;
-
-    for (var i = 0; i < bParts.length; i++) {
-        for (var j = 0; j < nParts.length; j++) {
-            if (wordSimilarity(bParts[i], nParts[j], matchDist)) return true;
-        }
-    }
-    return false;
-}
-function nameMatchScore(bParts, nParts, strict) {
-    var maxDist = strict ? 1 : 2;
-    var simScore = 0;
-    if (!bParts.length || !nParts.length) return 0;
-    bParts.forEach(function(bp) {
-        if (nParts.some(function(np) { return wordSimilarity(bp, np, maxDist); })) simScore++;
-    });
-    return simScore;
-}
-
-/** عند وجود كلمة واحدة في البوكينج (مثل Saws Ka → "saws" فقط)، نقبل المطابقة فقط إذا الكلمة المطابقة في نزيل هي الاسم الأول أو الأخير — لا اسم أوسط (تفادي ربط Saws Ka بـ عبدالله سعد عبدالله الغامدي لأن "Saws" تشبه "سعد"). */
-function singleWordMatchesFirstOrLast(bParts, nParts, maxDist) {
-    if (!bParts.length || bParts.length > 1 || !nParts.length) return false;
-    var bp = bParts[0];
-    for (var j = 0; j < nParts.length; j++) {
-        if ((j === 0 || j === nParts.length - 1) && wordSimilarity(bp, nParts[j], maxDist)) return true;
-    }
-    return false;
-}
-
-/** عند وجود كلمتين في البوكينج (مثل Saws Ka)، نقبل المطابقة فقط إذا كلتا الكلمتين تطابقان الاسم الأول أو الأخير في نزيل — لا اسم أوسط (تفادي ربط Saws Ka بـ ماجد شارع جربوع ال زامل لأن "saws" تشبه "شارع" و"ka" تشبه "ماجد" بالتقريب). */
-function twoWordMatchesFirstOrLast(bParts, nParts, maxDist) {
-    maxDist = maxDist === undefined ? 2 : maxDist;
-    if (!bParts.length || bParts.length !== 2 || !nParts.length) return false;
-    var first = 0, last = nParts.length - 1;
-    var b0First = wordSimilarity(bParts[0], nParts[first], maxDist);
-    var b0Last = wordSimilarity(bParts[0], nParts[last], maxDist);
-    var b1First = wordSimilarity(bParts[1], nParts[first], maxDist);
-    var b1Last = wordSimilarity(bParts[1], nParts[last], maxDist);
-    return (b0First || b0Last) && (b1First || b1Last);
-}
-
-/** اسم فرعي: كل كلمات الاسم الأقصر موجودة في الأطول (علي ابراهيم عابد داخل علي ابراهيم الضوي عابد، صالح السلمي داخل صالح دخيل ربه سلطان السلمي) */
-function nameSubsetMatch(bParts, nParts, maxDist) {
-    maxDist = maxDist === undefined ? 2 : maxDist;
-    if (!bParts.length || !nParts.length) return false;
-    var shorter = bParts.length <= nParts.length ? bParts : nParts;
-    var longer = bParts.length <= nParts.length ? nParts : bParts;
-    for (var i = 0; i < shorter.length; i++) {
-        if (!longer.some(function(lw) { return wordSimilarity(shorter[i], lw, maxDist); })) return false;
-    }
-    return true;
-}
-
-/** نفس الكلمات بترتيب مختلف (مشبب البراء ↔ البراء مشبب) — تسامح أكبر في السعر والتاريخ */
-function nameSameWords(bParts, nParts, maxDist) {
-    if (!bParts.length || !nParts.length || bParts.length !== nParts.length) return false;
-    return nameSubsetMatch(bParts, nParts, maxDist) && nameSubsetMatch(nParts, bParts, maxDist);
-}
-
-/** عكس الاسم: أول↔ثاني (Zaher ALASIRI ↔ ALASIRI Zaher، مشبب البراء ↔ البراء مشبب) — مرونة صريحة لتفادي مفقود زائف */
-function nameFirstLastReversed(bParts, nParts, maxDist) {
-    maxDist = maxDist === undefined ? 2 : maxDist;
-    if (!bParts.length || !nParts.length || bParts.length !== 2 || nParts.length !== 2) return false;
-    return wordSimilarity(bParts[0], nParts[1], maxDist) && wordSimilarity(bParts[1], nParts[0], maxDist);
-}
-
-/** عكس الاسم بتطابق صارم (أول/آخر فقط) — لرفض ربط خاطئ مثل Saws Ka ↔ طه سمير رجب، وقبول مشبب البراء ↔ البراء مشبب */
-function nameFirstLastReversedStrict(bParts, nParts) {
-    if (!bParts.length || !nParts.length || bParts.length !== 2 || nParts.length !== 2) return false;
-    return wordSimilarityStrictFirstLast(bParts[0], nParts[1]) && wordSimilarityStrictFirstLast(bParts[1], nParts[0]);
-}
-
-/** نفس الكلمات أو عكس أول/ثاني — يستخدم في كل مراحل المطابقة لمرونة كاملة */
-function nameSameWordsOrReversed(bParts, nParts, maxDist) {
-    if (nameSameWords(bParts, nParts, maxDist)) return true;
-    return nameFirstLastReversed(bParts, nParts, maxDist);
-}
+// [PURGE: LEGACY V19.1 START]
+// [PURGE: LEGACY V19.1 MIDDLE]
+// [PURGE: LEGACY V19.1 3.1]
 
 // V18.0: Diagnostic Difference
-function getDiffDiagnosis(diff, bPriceNet, taxMultiplier) {
-    const absDiff = Math.abs(diff);
-    if (absDiff < 5) return "مطابقة تامة"; // Almost zero difference
-    
-    // Check for Tax/Muni difference (17.5%)
-    const taxDiff = bPriceNet * (taxMultiplier - 1);
-    if (Math.abs(absDiff - taxDiff) < 5) return "فرق ضريبة/بلدية";
-
-    // Since we don't know the exact price per night, we check if the difference is a common night price variation (e.g., 20% of net price, covering an extra night at minimum price or a price adjustment)
-    const nightGuess = bPriceNet * 0.25; // Heuristic: maybe 25% of net booking price is one night
-    if (absDiff > nightGuess) return diff > 0 ? "تمديد ليلة محتمل" : "تخفيض سعر/خصم";
-
-    return diff > 0 ? "زيادة غير مشخصة" : "نقصان غير مشخص";
-}
+// [PURGE: LEGACY V19.1 3.2]
 
 
 // UI - Initialize event listeners after DOM is ready
 // This will be handled in init() method
 
-async function readSheet(file) {
-    return new Promise(resolve => {
-        const r = new FileReader();
-        r.onload = e => { const wb = XLSX.read(e.target.result, {type:'array'}); resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1})); };
-        r.readAsArrayBuffer(file);
-    });
-}
-// اكتشاف صف العناوين: نسمح ببدائل (موظف يكتب "اسم العميل" بدل "إسم العميل")
-function getData(raw, keys) {
-    let hRow = -1;
-    for(let i=0; i<20; i++) {
-        if(!raw[i]) continue;
-        let s = JSON.stringify(raw[i]);
-        let ok = keys.every(function(k) {
-            if(s.includes(k)) return true;
-            if(k === "إسم العميل" && s.includes("اسم العميل")) return true;
-            return false;
-        });
-        if(ok) { hRow = i; break; }
-    }
-    if(hRow===-1) return [];
-    let headers = raw[hRow].map(x=>String(x||"").trim());
-    return raw.slice(hRow+1).map(r => {
-        let obj={};
-        headers.forEach((h,i)=> {
-            let key = (h === "اسم العميل" ? "إسم العميل" : h);
-            obj[key] = r[i];
-        });
-        return obj;
-    });
-}
+// [PURGE: LEGACY V19.1 3.3]
 
-function setLoaderProgress(pct, label) {
-    var fill = document.getElementById('loaderProgressFill');
-    var lbl = document.getElementById('loaderLabel');
-    var pctEl = document.getElementById('loaderPct');
-    if (fill) fill.style.width = Math.min(100, Math.max(0, pct)) + '%';
-    if (lbl && label !== undefined) lbl.textContent = label;
-    if (pctEl) pctEl.textContent = Math.round(Math.min(100, Math.max(0, pct))) + '%';
-}
-if (typeof window !== 'undefined') window.setLoaderProgress = setLoaderProgress;
-
-async function startEngine() {
-    const f1 = document.getElementById('nazeelFile').files[0];
-    const f2 = document.getElementById('bookingFile').files[0];
-    if(!f1 || !f2) { alert("⚠️ يرجى رفع الملفات"); return; }
-
-    document.getElementById('loader').style.display = 'flex';
-    document.getElementById('uploadCard').style.display = 'none';
-    setLoaderProgress(0, 'جاري التحليل (V18.0)...');
-
-    const taxP = parseFloat(document.getElementById('taxVal').value) || 0;
-    const muniP = parseFloat(document.getElementById('muniVal').value) || 0;
-    const tax = 1 + ((taxP + muniP) / 100);
-
-    await initDB(); // V18.0: Initialize IndexedDB
-    setLoaderProgress(10, 'جاري قراءة ملف نزيل...');
-
-    setTimeout(async () => {
-        try {
-            const nRaw = await readSheet(f1);
-            setLoaderProgress(35, 'جاري قراءة ملف بوكينج...');
-            const bRaw = await readSheet(f2);
-            setLoaderProgress(55, 'جاري تجهيز البيانات...');
-            cachedN = getData(nRaw, ["إسم العميل"]); 
-            let tempB = getData(bRaw, ["رقم الحجز", "السعر"]);
-
-            let minD = null, maxD = null;
-            cachedN.forEach(r => { let d = parseDate(r["تاريخ الدخول"]); if(d) { if(!minD || d<minD) minD=d; if(!maxD || d>maxD) maxD=d; } });
-            if(minD && maxD) {
-                minD.setDate(minD.getDate()-1); maxD.setDate(maxD.getDate()+1);
-                cachedB = tempB.filter(b => { let d = parseDate(b["تسجيل الوصول"]); return !d || (d>=minD && d<=maxD); });
-            } else { cachedB = tempB; }
-            cachedB = normalizeBookingByRef(cachedB);
-
-            setLoaderProgress(75, 'جاري المطابقة...');
-            process(cachedB, cachedN, tax);
-            setLoaderProgress(100, 'تم التحليل');
-
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('controlPanel').style.display = 'flex';
-            document.getElementById('dashboard').style.display = 'grid';
-            document.getElementById('resultsArea').style.display = 'block';
-            var ht = document.getElementById('headerTools'); if(ht) ht.classList.add('visible');
-
-        } catch(e) { 
-            alert("Error: " + e.message); 
-            const loader = document.getElementById('loader');
-            const uploadCard = document.getElementById('uploadCard');
-            if(loader) loader.style.display = 'none';
-            if(uploadCard) uploadCard.style.display = 'block';
-        }
-    }, 100);
-}
+// [PURGE: LEGACY V19.1 3.4]
 
 /** تجميع صفوف البوكينج حسب رقم الحجز: حجز واحد = صف واحد (هدف المشروع: مراجعة العمولة بوحدة الحجز) */
-function normalizeBookingByRef(booking) {
-    if (!booking || !booking.length) return booking;
-    let refGroups = {};
-    booking.forEach(function(row, i) {
-        let ref = String(row["رقم الحجز"] || "").trim();
-        let key = ref ? ref : "_u_" + i;
-        if (!refGroups[key]) refGroups[key] = [];
-        refGroups[key].push(row);
-    });
-    return Object.keys(refGroups).map(function(key) {
-        let group = refGroups[key];
-        let first = group[0];
-        if (group.length === 1) return first;
-        let names = group.map(function(r) { return r["اسم الضيف\\الضيوف"] || r["اسم الضيف"] || r["تم الحجز من قِبل"] || ""; }).filter(Boolean);
-        let combined = names.join(" ، ");
-        let out = {};
-        Object.keys(first).forEach(function(k) { out[k] = first[k]; });
-        out["اسم الضيف\\الضيوف"] = combined;
-        out["اسم الضيف"] = combined;
-        return out;
-    });
-}
+// [PURGE: LEGACY V19.1 3.5]
 
-function yieldToUI() { return new Promise(function(r) { setTimeout(r, 0); }); }
+// [PURGE: LEGACY V19.1 3.6]
 
-async function process(booking, nazeel, tax) {
-    allRowsData = [];
-    if (typeof window !== 'undefined') window.allRowsData = allRowsData;
-    if (!nazeel || !Array.isArray(nazeel) || nazeel.length === 0) return;
-    if (!booking || !Array.isArray(booking) || booking.length === 0) return;
-
-    // --- Performance: Pre-compute normalized names & parts ONCE ---
-    var nazeelCache = nazeel.map(function(n, i) {
-        var nm = normalize(n["إسم العميل"] || "");
-        return { n: n, i: i, name: nm, parts: getParts(nm) };
-    });
-    var bookingCache = booking.map(function(b, idx) {
-        var nm = normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
-        return { name: nm, parts: getParts(nm) };
-    });
-    // --- End Performance Cache ---
-
-    let s = { book:0, match:0, money:0, recover:0, group:0, miss:0, revB:0, revN:0 };
-    let sub = { ok:0, can:0, nos:0 };
-    let takenNazeel = new Set();
-    let processedBooking = new Set();
-
-    // --- ARCHITECTURAL OVERHAUL: Multi-Index Lookup (O(N) -> O(1)) ---
-    var nazeelByDate = new Map();
-    var nazeelByRef = new Map();
-
-    nazeelCache.forEach(function(item) {
-        // Date Index
-        var d = parseDate(item.n["تاريخ الدخول"]);
-        if (d) {
-            var dateKey = d.toISOString().split('T')[0];
-            if (!nazeelByDate.has(dateKey)) nazeelByDate.set(dateKey, []);
-            nazeelByDate.get(dateKey).push(item);
-        }
-        // Ref Index (O1 lookup)
-        if (refKey) {
-            var val = String(item.n[refKey] || "").trim();
-            if (val && val !== "0" && val.length > 4) {
-                if (!nazeelByRef.has(val)) nazeelByRef.set(val, []);
-                nazeelByRef.get(val).push(item);
-            }
-        }
-    });
-
-    function getPoolInDateRange(centerDate, toleranceDays) {
-        if (!centerDate) return nazeelCache.filter(x => !takenNazeel.has(x.i));
-        var items = [];
-        for (var d = -toleranceDays; d <= toleranceDays; d++) {
-            var target = new Date(centerDate.getTime());
-            target.setDate(target.getDate() + d);
-            var key = target.toISOString().split('T')[0];
-            var dayItems = nazeelByDate.get(key);
-            if (dayItems) {
-                for (var i = 0; i < dayItems.length; i++) {
-                    if (!takenNazeel.has(dayItems[i].i)) items.push(dayItems[i]);
-                }
-            }
-        }
-        return items;
-    }
-
-    function getItemsByRef(ref) {
-        var val = String(ref || "").trim();
-        if (!val || val.length <= 4) return [];
-        var matches = nazeelByRef.get(val) || [];
-        return matches.filter(x => !takenNazeel.has(x.i));
-    }
-
-    function updateProgressBar(pct, stage) {
-        var stats = " [" + s.match + " مطابقة | " + s.miss + " مفقود]";
-        setLoaderProgress(pct, stage + stats);
-    }
-    // --- End Indexing ---
-
-    // عمود مرجع/رقم الحجز في نزيل: أولوية مرجع/مصدر ثم رقم الحجز ثم id (للمطابقة المباشرة عند توفر نفس الـ ID)
-    const nazeelKeys = Object.keys(nazeel[0]||{});
-    const refKey = nazeelKeys.find(k => k.includes("مرجع") || k.includes("مصدر"))
-        || nazeelKeys.find(k => k.includes("رقم الحجز") || (k.includes("رقم") && k.includes("حجز")))
-        || nazeelKeys.find(k => /^id$/i.test(String(k).trim()))
-        || "";
-    
-    booking.forEach(b => {
-        s.book++;
-        let st = String(b["الحالة"]||"").toLowerCase();
-        if(st.includes("ok")) sub.ok++; else if(st.includes("cancel")) sub.can++; else sub.nos++;
-    });
-
-    // V18.0: 0. Alias Mapping (The Memory)
-    updateProgressBar(76, 'مطابقة الأسماء المحفوظة...');
-    await yieldToUI();
-    await Promise.all(booking.map(async (b, idx) => {
-        if(processedBooking.has(idx)) return;
-        const bName = b["اسم الضيف\\الضيوف"] || b["اسم الضيف"];
-        const alias = await getAlias(bName);
-        
-        if (alias) {
-            const bDate = parseDate(b["تسجيل الوصول"]);
-            let pool = getPoolInDateRange(bDate, 14); // Wider range for aliases
-            let match = pool.find(x => normalize(x.n["إسم العميل"]).includes(alias.nName));
-            
-            if (match) {
-                processedBooking.add(idx); takenNazeel.add(match.i);
-                storeResult(b, match.n, "alias", s, tax);
-            }
-        }
-    }));
-
-
-    // 1. Grouping
-    updateProgressBar(79, 'تجميع الحجوزات...');
-    await yieldToUI();
-    let groups = {};
-    booking.forEach((b, idx) => {
-        if(processedBooking.has(idx)) return; // V18.0: Skip if already processed by alias
-        let name = normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
-        if(!groups[name]) groups[name] = [];
-        groups[name].push({data: b, idx: idx});
-    });
-
-    // 1.0 ربط الحجوزات الفردية (اسم واحد فقط) قبل التجميع — حتى يُستهلك عمار النخلي بأمّار ولا يدخل مرشحي مجموعة بدر
-    for (let name in groups) {
-        let group = groups[name];
-        if (group.length !== 1) continue;
-        let item = group[0];
-        if (processedBooking.has(item.idx)) continue;
-        let b = item.data;
-        let bName = normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
-        let bParts = getParts(bName);
-        if (bParts.length !== 2) continue; // نربط فقط من كلمتين (عمار النخلي، إلخ)
-        let expPrice = cleanPrice(b["السعر"]) * tax;
-        let bDate = parseDate(b["تسجيل الوصول"]);
-        let pool = getPoolInDateRange(bDate, 7); // Architectural Overhaul: O(1) indexed lookup instead of O(N) scan
-        let strictMatch = pool.find(x => {
-            let nName = normalize(x.n["إسم العميل"] || "");
-            let nParts = getParts(nName);
-            if (!twoWordMatchesFirstOrLastStrict(bParts, nParts)) return false;
-            let nPrice = cleanPrice(x.n["الايجار الكلي"] || x.n["الاجمالي"]);
-            let nDate = parseDate(x.n["تاريخ الدخول"]);
-            var tolPrice = Math.max(PRICE_TOLERANCE_NAME * 2, 45);
-            if (!bDate || !nDate) tolPrice = Math.min(350, Math.max(150, Math.round(expPrice * 0.30)));
-            let priceOk = Math.abs(nPrice - expPrice) <= tolPrice;
-            if (bDate && nDate) {
-                let dateOk = Math.abs((nDate - bDate) / 864e5) <= 7;
-                return priceOk && dateOk;
-            }
-            return priceOk;
-        });
-        if (strictMatch) {
-            processedBooking.add(item.idx);
-            takenNazeel.add(strictMatch.i);
-            storeResult(b, strictMatch.n, "name", s, tax);
-        }
-    }
-
-    for(let name in groups) {
-        let group = groups[name];
-        if(group.length < 2) continue;
-        let totalExp = group.reduce((sum, item) => sum + (cleanPrice(item.data["السعر"])*tax), 0);
-        let minDate = group.reduce((min, item) => { let d=parseDate(item.data["تسجيل الوصول"]); return (!min||d<min)?d:min; }, null);
-        let bParts = getParts(name);
-        let pool = getPoolInDateRange(minDate, 7); // Collective Group Lookup
-        // 1) محاولة صف نزيل واحد بمجموع السعر (حالة إقامة واحدة في نزيل)
-        // شرط اسم قوي: عند كلمتين نطلب تطابق صارم أول/آخر (تفادي Bader Alrwili ↔ عمار النخلي)
-        let match = pool.find(x => {
-            let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-            let nDate = parseDate(x.n["تاريخ الدخول"]);
-            let nName = normalize(x.n["إسم العميل"]||"");
-            let nParts = getParts(nName);
-            let priceOk = Math.abs(nPrice - totalExp) <= PRICE_TOLERANCE_GROUP;
-            let relOk = totalExp > 0 && Math.abs(nPrice - totalExp) / totalExp <= 0.05;
-            let dateOk = minDate && nDate && Math.abs((nDate - minDate)/864e5) <= DATE_TOLERANCE_DAYS_GROUP;
-            let sim = nameMatchScore(bParts, nParts, false);
-            let nameOk = (sim >= 2) && (bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, nParts)) || (bParts.length === 1 && sim === 1 && singleWordMatchesFirstOrLast(bParts, nParts, 2));
-            return priceOk && relOk && dateOk && nameOk;
-        });
-        // 2) إن لم يُوجد: نفس الضيف له إقامتان في نزيل — مجموع سعرين ≈ totalExp، مع تطابق اسم صارم لأحد الصفين (تفادي Hamzah Othman ↔ فيصل عمر محمد باسلم)
-        if(!match) {
-            let candidates = pool.filter(x => {
-                let nName = normalize(x.n["إسم العميل"]||"");
-                let nParts = getParts(nName);
-                let sim = nameMatchScore(bParts, nParts, false);
-                return (sim >= 2) && (bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, nParts)) || (bParts.length === 1 && sim === 1 && singleWordMatchesFirstOrLast(bParts, nParts, 2));
-            });
-            for(let i = 0; i < candidates.length; i++) {
-                for(let j = i + 1; j < candidates.length; j++) {
-                    let p1 = cleanPrice(candidates[i].n["الايجار الكلي"]||candidates[i].n["الاجمالي"]);
-                    let p2 = cleanPrice(candidates[j].n["الايجار الكلي"]||candidates[j].n["الاجمالي"]);
-                    let sumOk = Math.abs(p1 + p2 - totalExp) <= PRICE_TOLERANCE_GROUP;
-                    let relOk = totalExp > 0 && Math.abs(p1 + p2 - totalExp) / totalExp <= 0.05;
-                    let d1 = parseDate(candidates[i].n["تاريخ الدخول"]);
-                    let d2 = parseDate(candidates[j].n["تاريخ الدخول"]);
-                    let dateOk = minDate && ( (d1 && Math.abs((d1 - minDate)/864e5) <= DATE_TOLERANCE_DAYS_GROUP) || (d2 && Math.abs((d2 - minDate)/864e5) <= DATE_TOLERANCE_DAYS_GROUP) );
-                    let strict1 = bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(candidates[i].n["إسم العميل"]||"")));
-                    let strict2 = bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(candidates[j].n["إسم العميل"]||"")));
-                    let amountVerified = Math.abs(p1 + p2 - totalExp) <= 5;
-                    if(sumOk && relOk && dateOk && strict1 && strict2) {
-                        match = { multi: true, rows: [candidates[i], candidates[j]], totalPrice: p1 + p2, amountVerified: amountVerified };
-                        break;
-                    }
-                }
-                if(match) break;
-            }
-        }
-        if(match) {
-            if(match.multi) {
-                match.rows.forEach(r => takenNazeel.add(r.i));
-                group.forEach((item, i) => {
-                    processedBooking.add(item.idx);
-                    storeResult(item.data, (i===0 ? match.rows[0].n : null), "group", s, tax, i===0, i===0 ? match.totalPrice : undefined, undefined, match.amountVerified);
-                });
-            } else {
-                let amountVerified = totalExp > 0 && Math.abs(cleanPrice(match.n["الايجار الكلي"]||match.n["الاجمالي"]) - totalExp) <= 5;
-                takenNazeel.add(match.i);
-                group.forEach((item, i) => {
-                    processedBooking.add(item.idx);
-                    storeResult(item.data, (i===0?match.n:null), "group", s, tax, i===0, undefined, undefined, i===0 ? amountVerified : undefined);
-                });
-            }
-        }
-    }
-
-    // 2. Waterfall (Individual) — نعالج أولاً الحجوزات ذات التطابق الاسمي الأقوى
-    // PERF: Pre-compute priority scores O(B×N) instead of O(B²×N) inside sort comparator
-    updateProgressBar(82, 'مطابقة فردية...');
-    await yieldToUI();
-    let individualIndices = booking.map((_, idx) => idx).filter(idx => !processedBooking.has(idx));
-    let poolForPriority = nazeelCache.filter(x => !takenNazeel.has(x.i));
-    let priorityScores = new Map();
-    let priorityFL = new Map();
-    individualIndices.forEach(function(idx) {
-        var bParts = bookingCache[idx].parts;
-        var bestScore = 0, hasFL = false;
-        for (var pi = 0; pi < poolForPriority.length; pi++) {
-            var nc = poolForPriority[pi];
-            var s = nameMatchScore(bParts, nc.parts, false);
-            var fl = bParts.length === 2 && twoWordMatchesFirstOrLastStrict(bParts, nc.parts);
-            if (fl) s += 10;
-            if (s > bestScore) { bestScore = s; hasFL = fl; }
-            else if (s === bestScore && fl) hasFL = true;
-        }
-        priorityScores.set(idx, bestScore);
-        priorityFL.set(idx, hasFL);
-    });
-    individualIndices.sort(function(i, j) {
-        var si = priorityScores.get(i), sj = priorityScores.get(j);
-        if (sj !== si) return sj - si;
-        return (priorityFL.get(j) ? 1 : 0) - (priorityFL.get(i) ? 1 : 0);
-    });
-    individualIndices.forEach(idx => {
-        const b = booking[idx];
-        if(processedBooking.has(idx)) return;
-        const bRef = String(b["رقم الحجز"]||"").trim();
-        const bName = normalize(b["اسم الضيف\\الضيوف"] || b["اسم الضيف"]);
-        const bPrice = cleanPrice(b["السعر"]);
-        const expPrice = bPrice * tax;
-        const bDate = parseDate(b["تسجيل الوصول"]);
-        const bStatus = String(b["الحالة"] || "").toLowerCase();
-        const isConfirmedBooking = bStatus.includes("ok") || bStatus.includes("مؤكد") || bStatus.includes("confirmed");
-        
-        // Architectural Overhaul: O(1) indexed lookup instead of O(N) scan
-        let pool = getPoolInDateRange(bDate, 14); 
-        let match = null, type = "";
-
-        // Ref — أولوية كبيرة (Global Lookup O1): إذا رقم الحجز متطابق تماماً في نزيل وبوكينج (مثل 5667545212) نربط مباشرة دون التحقق من الاسم.
-        if (refKey && bRef && bRef.length > 4) {
-            let directMatches = getItemsByRef(bRef);
-            let exactRefMatches = directMatches.filter(function(x) { return bRef === String(x.n[refKey] || "").trim(); });
-            if (exactRefMatches.length > 0) {
-                var totalNazeelPrice = exactRefMatches.reduce(function(sum, m) { return sum + cleanPrice(m.n["الايجار الكلي"]||m.n["الاجمالي"]); }, 0);
-                exactRefMatches.forEach(function(m) { takenNazeel.add(m.i); });
-                processedBooking.add(idx);
-                storeResult(b, exactRefMatches[0].n, "ref", s, tax, false, totalNazeelPrice);
-                return;
-            }
-        }
-
-        // Ref — تسامح (ناقص/زائد/حرف): يبقى خطوة إضافية مع تحقق اسم تفادي ربط خاطئ (Saws Ka ↔ هادي العنزى).
-        if(refKey && bRef) {
-            let refMatches = pool.filter(x => refMatch(bRef, x.n[refKey]));
-            if(refMatches.length > 0) {
-                let bParts = getParts(bName);
-                let scored = refMatches.map(m => {
-                    let nParts = getParts(normalize(m.n["إسم العميل"]||""));
-                    let score = nameMatchScore(bParts, nParts, false);
-                    let subset = nameSubsetMatch(bParts, nParts, 2) || nameSubsetMatch(nParts, bParts, 2);
-                    let sameWords = bParts.length >= 2 && nParts.length === bParts.length && nameSameWordsOrReversed(bParts, nParts, 2);
-                    return { m, score, strong: score >= 2 || subset || sameWords };
-                });
-                let best = scored.reduce((acc, cur) => (!acc || (cur.strong && !acc.strong) || (cur.score > acc.score)) ? cur : acc, null);
-                if (best.strong || bParts.length < 2 || best.score >= 1) {
-                    let totalNazeelPrice = refMatches.reduce((sum, m) => sum + cleanPrice(m.n["الايجار الكلي"]||m.n["الاجمالي"]), 0);
-                    refMatches.forEach(m => takenNazeel.add(m.i));
-                    processedBooking.add(idx);
-                    storeResult(b, best.m.n, "ref", s, tax, false, totalNazeelPrice);
-                    return;
-                }
-            }
-        }
-
-        // عكس الاسم أولاً (مشبب البراء ↔ البراء مشبب، Zaher ALASIRI ↔ ALASIRI Zaher) — قبل أي مطابقة أخرى بالاسم حتى لا يُستهلك الصف
-        if(!match) {
-            let bParts = getParts(bName);
-            if(bParts.length === 2) {
-                let reversedMatch = pool.find(x => {
-                    let nName = normalize(x.n["إسم العميل"]);
-                    let nParts = getParts(nName);
-                    if(nParts.length !== 2 || !nameFirstLastReversedStrict(bParts, nParts)) return false;
-                    let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-                    let nDate = parseDate(x.n["تاريخ الدخول"]);
-                    let tolPrice = Math.max(PRICE_TOLERANCE_NAME * 2, 45);
-                    if (!bDate || !nDate) tolPrice = Math.min(350, Math.max(150, Math.round(expPrice * 0.30)));
-                    let priceMatch = Math.abs(nPrice - expPrice) <= tolPrice;
-                    if(bDate && nDate) {
-                        let dateMatch = Math.abs((nDate - bDate)/864e5) <= 7;
-                        return dateMatch && priceMatch;
-                    }
-                    return priceMatch;
-                });
-                if(reversedMatch) { match = reversedMatch; type = "reversed"; }
-            }
-        }
-
-        // نفس الكلمات بترتيب مختلف أو عكس أول/ثاني — مرحلة مبكرة، تسامح واسع
-        if(!match) {
-            let bParts = getParts(bName);
-            if(bParts.length >= 2) {
-                match = pool.find(x => {
-                    let nName = normalize(x.n["إسم العميل"]);
-                    let nParts = getParts(nName);
-                    if(!nameSameWordsOrReversed(bParts, nParts, 2)) return false;
-                    if(bParts.length === 2 && !twoWordMatchesFirstOrLastStrict(bParts, nParts)) return false;
-                    let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-                    let nDate = parseDate(x.n["تاريخ الدخول"]);
-                    var tolPrice = Math.max(PRICE_TOLERANCE_GUESS * 3, 30);
-                    if (!bDate || !nDate) tolPrice = Math.min(350, Math.max(150, Math.round(expPrice * 0.30)));
-                    let priceMatch = Math.abs(nPrice - expPrice) <= tolPrice;
-                    if(bDate && nDate) {
-                        let tolDays = 7;
-                        let dateMatch = Math.abs((nDate - bDate)/864e5) <= tolDays;
-                        return dateMatch && priceMatch;
-                    }
-                    return priceMatch;
-                });
-                if(match) type = "name";
-            }
-        }
-
-        // اسم فرعي (صالح السلمي ↔ صالح دخيل ربه سلطان السلمي). عند أكثر من مرشح نفضّل الأقوى (twoWordMatchesFirstOrLast ثم nameMatchScore)
-        if(!match) {
-            let bParts = getParts(bName);
-            if(bParts.length >= 2) {
-                let subsetCandidates = pool.filter(x => {
-                    let nName = normalize(x.n["إسم العميل"]);
-                    let nParts = getParts(nName);
-                    if(!nameSubsetMatch(bParts, nParts, 2)) return false;
-                    if(bParts.length === 2 && !twoWordMatchesFirstOrLastStrict(bParts, nParts)) return false;
-                    let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-                    let nDate = parseDate(x.n["تاريخ الدخول"]);
-                    var tolPrice = PRICE_TOLERANCE_GUESS * 2;
-                    if (!bDate || !nDate) tolPrice = Math.min(350, Math.max(150, Math.round(expPrice * 0.30)));
-                    let priceMatch = Math.abs(nPrice - expPrice) <= tolPrice;
-                    if(bDate && nDate) {
-                        let tolDays = 7;
-                        let dateMatch = Math.abs((nDate - bDate)/864e5) <= tolDays;
-                        return dateMatch && priceMatch;
-                    }
-                    return priceMatch;
-                });
-                match = subsetCandidates.length ? subsetCandidates.sort((a, b) => {
-                    let ap = getParts(normalize(a.n["إسم العميل"]||"")), bp = getParts(normalize(b.n["إسم العميل"]||""));
-                    let aFL = twoWordMatchesFirstOrLast(bParts, ap, 2);
-                    let bFL = twoWordMatchesFirstOrLast(bParts, bp, 2);
-                    if (aFL !== bFL) return (bFL ? 1 : 0) - (aFL ? 1 : 0);
-                    return nameMatchScore(bParts, bp, false) - nameMatchScore(bParts, ap, false);
-                })[0] : null;
-                if(match) type = "name";
-            }
-        }
-
-        // Name — ديناميكي + تسامح. عند وجود أكثر من مرشح نفضّل الأقوى (أعلى nameMatchScore ثم twoWordMatchesFirstOrLast) لتفادي Majed Al zamil → طه سمير رجب بدل ماجد شارع جربوع ال زامل
-        if(!match) {
-            let bParts = getParts(bName);
-            let bNameNorm = normalize(bName);
-            let candidates = pool.filter(x => {
-                let nName = normalize(x.n["إسم العميل"]);
-                let nParts = getParts(nName);
-                if (bParts.length === 2 && !twoWordMatchesFirstOrLastStrict(bParts, nParts) && !nameSameWordsOrReversed(bParts, nParts, 2)) return false;
-                let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-                let nDate = parseDate(x.n["تاريخ الدخول"]);
-                let simScore = nameMatchScore(bParts, nParts, false);
-                let subsetMatch = nameSubsetMatch(bParts, nParts, 2);
-                let sameWords = nameSameWordsOrReversed(bParts, nParts, 2);
-                let namesVeryClose = (simScore >= 2 && bNameNorm.length && nName.length && levenshtein(bNameNorm, nName) <= 3) || subsetMatch;
-                var priceTol = sameWords ? PRICE_TOLERANCE_NAME * 3 : (namesVeryClose ? PRICE_TOLERANCE_NAME * 2 : PRICE_TOLERANCE_NAME);
-                if ((!bDate || !nDate) && (sameWords || subsetMatch)) priceTol = Math.min(350, Math.max(150, Math.round(expPrice * 0.30)));
-                let dateTolDays = sameWords ? 5 : (namesVeryClose ? 3 : DATE_TOLERANCE_DAYS_NAME);
-                let priceHit = Math.abs(nPrice - expPrice) <= priceTol;
-                let dateHit = bDate && nDate && Math.abs((nDate - bDate)/864e5) <= dateTolDays;
-                let nameHit = subsetMatch || (simScore >= 2) || (simScore === 1 && singleWordMatchesFirstOrLast(bParts, nParts, 2)) || (simScore >= 1 && dateHit && priceHit && (simScore >= 2 || singleWordMatchesFirstOrLast(bParts, nParts, 2)));
-                // عند كلمتين بوكينج واسم نزيل أطول: نقبل فقط إن تطابق أول/آخر صارم (مرادف أو ليفنشتاين 1 أو بادئة) — تفادي Zaher↔ياسر، Rana Saad↔علي مشبب
-                // عند كلمتين بوكينج: نقبل فقط إن نفس الكلمات/عكس أو تطابق صارم أول/آخر — تفادي مشبب البراء↔TAIEB Azlouk، صالح السلمي↔abdulrahman asiri، Saws Ka↔طه سمير رجب
-                if (nameHit && bParts.length === 2 && !nameSameWordsOrReversed(bParts, nParts, 2) && !twoWordMatchesFirstOrLastStrict(bParts, nParts)) nameHit = false;
-                // تطابق اسم قوي (أول/آخر صارم + كلمتان): نقبل مرشحاً حتى مع اختلاف التاريخ، بتسامح سعر أوسع (تفادي استبعاد ماجد شارع جربوع ال زامل لـ Majed Al zamil)
-                let strongNameFL = bParts.length === 2 && twoWordMatchesFirstOrLastStrict(bParts, nParts) && simScore >= 2;
-                let priceHitWide = strongNameFL && Math.abs(nPrice - expPrice) <= Math.min(200, Math.max(80, Math.round(expPrice * 0.15)));
-                // بعض تقارير الإحصائية تحمل السعر بصيغة مختلفة؛ للحجز المؤكد نقبل الاسم القوي + التاريخ حتى لو السعر بعيد.
-                let strongNameDateForConfirmed = isConfirmedBooking && strongNameFL && dateHit;
-                return (nameHit && (priceHit || dateHit)) || (strongNameFL && priceHitWide) || strongNameDateForConfirmed;
-            });
-            match = candidates.length ? candidates.sort((a, b) => {
-                let ap = getParts(normalize(a.n["إسم العميل"]||"")), bp = getParts(normalize(b.n["إسم العميل"]||""));
-                let aStrict = twoWordMatchesFirstOrLastStrict(bParts, ap);
-                let bStrict = twoWordMatchesFirstOrLastStrict(bParts, bp);
-                if (aStrict !== bStrict) return (bStrict ? 1 : 0) - (aStrict ? 1 : 0);
-                let aScore = nameMatchScore(bParts, ap, false);
-                let bScore = nameMatchScore(bParts, bp, false);
-                if (aScore !== bScore) return bScore - aScore;
-                let aFL = twoWordMatchesFirstOrLast(bParts, ap, 2);
-                let bFL = twoWordMatchesFirstOrLast(bParts, bp, 2);
-                return (bFL ? 1 : 0) - (aFL ? 1 : 0);
-            })[0] : null;
-            if(match) type = "name";
-        }
-
-        // حارس نهائي: لا نقبل "اسم" لأسماء من كلمتين إلا بتطابق صارم أول/آخر — تفادي Ali Alinur↔هدى الزبير، العالم حنان↔ali alinur، Saws Ka↔طه سمير رجب، مشبب البراء↔TAIEB Azlouk
-        if (match && type === "name") {
-            let bPartsFinal = getParts(bName);
-            let nPartsFinal = getParts(normalize(match.n["إسم العميل"]||""));
-            if (bPartsFinal.length === 2 && !twoWordMatchesFirstOrLastStrict(bPartsFinal, nPartsFinal)) { match = null; type = null; }
-        }
-        if(match) {
-            processedBooking.add(idx); takenNazeel.add(match.i);
-            storeResult(b, match.n, type, s, tax);
-        }
-    });
-
-    // 2.5 حجز واحد ↔ إقامتان نزيل
-    updateProgressBar(88, 'فحص الإقامات المتعددة...');
-    await yieldToUI();
-    booking.forEach((b, idx) => {
-        if(processedBooking.has(idx)) return;
-        const bName = bookingCache[idx].name;
-        const bParts = bookingCache[idx].parts;
-        const expPrice = cleanPrice(b["السعر"]) * tax;
-        const bDate = parseDate(b["تسجيل الوصول"]);
-        let pool = getPoolInDateRange(bDate, 4);
-        let candidates = pool.filter(x => {
-            let nName = normalize(x.n["إسم العميل"]||"");
-            let nParts = getParts(nName);
-            let sim = nameMatchScore(bParts, nParts, false);
-            return (sim >= 2) && (bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, nParts)) || (bParts.length === 1 && sim === 1 && singleWordMatchesFirstOrLast(bParts, nParts, 2));
-        });
-        let match = null;
-        for(let i = 0; i < candidates.length; i++) {
-            for(let j = i + 1; j < candidates.length; j++) {
-                let p1 = cleanPrice(candidates[i].n["الايجار الكلي"]||candidates[i].n["الاجمالي"]);
-                let p2 = cleanPrice(candidates[j].n["الايجار الكلي"]||candidates[j].n["الاجمالي"]);
-                let sumOk = Math.abs(p1 + p2 - expPrice) <= PRICE_TOLERANCE_NAME;
-                let relOk = expPrice > 0 && Math.abs(p1 + p2 - expPrice) / expPrice <= 0.05;
-                let d1 = parseDate(candidates[i].n["تاريخ الدخول"]);
-                let d2 = parseDate(candidates[j].n["تاريخ الدخول"]);
-                let dateOk = !bDate || (d1 && Math.abs((d1 - bDate)/864e5) <= DATE_TOLERANCE_DAYS_NAME) || (d2 && Math.abs((d2 - bDate)/864e5) <= DATE_TOLERANCE_DAYS_NAME);
-                let strict1 = bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(candidates[i].n["إسم العميل"]||"")));
-                let strict2 = bParts.length !== 2 || twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(candidates[j].n["إسم العميل"]||"")));
-                let amountVerified = Math.abs(p1 + p2 - expPrice) <= 5;
-                if(sumOk && relOk && dateOk && strict1 && strict2) {
-                    match = { rows: [candidates[i], candidates[j]], totalPrice: p1 + p2, amountVerified: amountVerified };
-                    break;
-                }
-            }
-            if(match) break;
-        }
-        if(match) {
-            match.rows.forEach(r => takenNazeel.add(r.i));
-            processedBooking.add(idx);
-            storeResult(b, match.rows[0].n, "multi", s, tax, false, match.totalPrice, undefined, match.amountVerified);
-        }
-    });
-
-    // V18.0: 3. Behavioral Extension Check
-    updateProgressBar(90, 'فحص التمديدات...');
-    await yieldToUI();
-    booking.forEach((b, idx) => {
-        if(processedBooking.has(idx)) return;
-        
-        const bPrice = cleanPrice(b["السعر"]);
-        const expPrice = bPrice * tax;
-        const bDate = parseDate(b["تسجيل الوصول"]);
-        const bOutDate = parseDate(b["تاريخ المغادرة"]);
-
-        let pool = getPoolInDateRange(bDate, 4);
-
-        // Find a Nazeel booking whose check-out date is AFTER Booking's check-out date
-        let match = pool.find(x => {
-            let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-            let nDate = parseDate(x.n["تاريخ الدخول"]);
-            let nOutDate = parseDate(x.n["تاريخ الخروج"]);
-            
-            if(!bDate || !nDate || !bOutDate || !nOutDate) return false;
-
-            // Date match check-in: بوكينج 1 يناير ونزيل 2 يناير → نفس الضيف
-            let dateMatch = Math.abs((nDate - bDate)/864e5) <= DATE_TOLERANCE_DAYS_EXT;
-            let extensionHit = (nOutDate > bOutDate);
-            let priceMatch = Math.abs(nPrice - expPrice) < PRICE_TOLERANCE_EXT;
-
-            return dateMatch && extensionHit && priceMatch;
-        });
-
-        if(match) {
-            processedBooking.add(idx); takenNazeel.add(match.i);
-            storeResult(b, match.n, "extension", s, tax);
-        }
-    });
-    
-    // 4. ORPHAN SCAVENGER (Price/Date Guess)
-    updateProgressBar(94, 'بحث عن تطابقات إضافية...');
-    await yieldToUI();
-    booking.forEach((b, idx) => {
-        if(processedBooking.has(idx)) return; 
-
-        const bName = bookingCache[idx].name;
-        const bParts = bookingCache[idx].parts;
-        const bPrice = cleanPrice(b["السعر"]);
-        const expPrice = bPrice * tax;
-        const bDate = parseDate(b["تسجيل الوصول"]);
-
-        let pool = getPoolInDateRange(bDate, DATE_TOLERANCE_DAYS_GUESS + 3);
-        
-        let match = pool.find(x => {
-            let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-            let nDate = parseDate(x.n["تاريخ الدخول"]);
-            if(!bDate || !nDate) return false;
-
-            let nName = normalize(x.n["إسم العميل"]||"");
-            let nParts = getParts(nName);
-            let nameOverlap = guessNameOverlap(bParts, nParts);
-            let subsetMatch = nameSubsetMatch(bParts, nParts, 2);
-            let sameWords = nameSameWordsOrReversed(bParts, nParts, 2);
-            let reversedOnly = nameFirstLastReversed(bParts, nParts, 2);
-            // LOGIC: التخمين الذكي يجب ألا يتعدى فرق السعر فيه 2 ريال لضمان الدقة
-            let tolDays = sameWords ? 7 : (subsetMatch ? 4 : DATE_TOLERANCE_DAYS_GUESS);
-            let tolPrice = 2;
-            let dateMatch = Math.abs((nDate - bDate)/864e5) <= tolDays;
-            let priceMatch = Math.abs(nPrice - expPrice) <= tolPrice;
-            if(!dateMatch || !priceMatch) return false;
-            // عند كلمة واحدة في البوكينج: نقبل فقط إذا المطابقة على الاسم الأول أو الأخير في نزيل (تفادي Saws ↔ سعد)
-            if (bParts.length === 1 && nameOverlap && !singleWordMatchesFirstOrLast(bParts, nParts, 3)) return false;
-            // عند كلمتين أو أكثر: نطلب تطابق صارم أول/آخر أو نفس الكلمات/عكس — تفادي Ali Huda ↔ حمادة سليمان (كلمة واحدة تشبه بالتقريب)
-            if (bParts.length >= 2 && !nameSameWordsOrReversed(bParts, nParts, 2) && !twoWordMatchesFirstOrLastStrict(bParts, nParts)) return false;
-            return dateMatch && priceMatch && nameOverlap;
-        });
-
-        if(match) {
-            processedBooking.add(idx); takenNazeel.add(match.i);
-            storeResult(b, match.n, "guess", s, tax);
-        } else {
-            // فرصة أخيرة: تطابق صارم أول/آخر أو نفس الكلمات/عكس مع تسامح واسع (7 أيام، فرق سعر 45) — تفادي Ali Huda ↔ حمادة سليمان
-            match = pool.find(x => {
-                let nParts = getParts(normalize(x.n["إسم العميل"]||""));
-                if (bParts.length >= 2 && !nameSameWordsOrReversed(bParts, nParts, 2) && !twoWordMatchesFirstOrLastStrict(bParts, nParts)) return false;
-                if (bParts.length === 1 && (nameMatchScore(bParts, nParts, false) < 1 || !singleWordMatchesFirstOrLast(bParts, nParts, 2))) return false;
-                let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-                let nDate = parseDate(x.n["تاريخ الدخول"]);
-                if (!bDate || !nDate) return false;
-                let dateOk = Math.abs((nDate - bDate)/864e5) <= 7;
-                let priceOk = Math.abs(nPrice - expPrice) <= 2;
-                return dateOk && priceOk;
-            });
-            if (match) {
-                processedBooking.add(idx); takenNazeel.add(match.i);
-                storeResult(b, match.n, "guess", s, tax);
-            }
-        }
-        // مرونة عكس الاسم (بتطابق صارم): Zaher ALASIRI ↔ ALASIRI Zaher، مشبب البراء ↔ البراء مشبب — رفض Saws Ka ↔ طه سمير رجب
-        if (!match && bParts.length === 2) {
-            match = pool.find(x => {
-                let nName = normalize(x.n["إسم العميل"]||"");
-                let nParts = getParts(nName);
-                if (nParts.length !== 2 || !nameFirstLastReversedStrict(bParts, nParts)) return false;
-                let nPrice = cleanPrice(x.n["الايجار الكلي"]||x.n["الاجمالي"]);
-                let nDate = parseDate(x.n["تاريخ الدخول"]);
-                let tolPrice = 45;
-                if (!bDate || !nDate) tolPrice = Math.min(350, Math.max(150, Math.round(expPrice * 0.30)));
-                let priceMatch = Math.abs(nPrice - expPrice) <= tolPrice;
-                if (bDate && nDate) {
-                    let dateMatch = Math.abs((nDate - bDate)/864e5) <= 7;
-                    return dateMatch && priceMatch;
-                }
-                return priceMatch;
-            });
-            if (match) {
-                processedBooking.add(idx); takenNazeel.add(match.i);
-                storeResult(b, match.n, "reversed", s, tax);
-            }
-        }
-        if (!match) {
-            // ربما الاسم موجود في نزيل: لأسماء من كلمتين نعتمد فقط تطابق صارم أول/آخر أو نفس الكلمات/عكس بتسامح 1 — تفادي Saws Ka→اسماعيل ايوب، hamada omara→سلطان الزهراني، Zaher→حسام الاحمدى
-            let candidates = pool.filter(x => {
-                let nParts = getParts(normalize(x.n["إسم العميل"]||""));
-                let score = nameMatchScore(bParts, nParts, false);
-                if (bParts.length === 2) return twoWordMatchesFirstOrLastStrict(bParts, nParts) || nameSameWordsOrReversed(bParts, nParts, 1);
-                return twoWordMatchesFirstOrLastStrict(bParts, nParts) || nameSameWordsOrReversed(bParts, nParts, 2) || nameSubsetMatch(bParts, nParts, 2) || score >= 2 || (bParts.length === 1 && score >= 1 && singleWordMatchesFirstOrLast(bParts, nParts, 2));
-            });
-            let suggested = candidates.length ? candidates.sort(function(a, b) {
-                let ap = getParts(normalize(a.n["إسم العميل"]||"")), bp = getParts(normalize(b.n["إسم العميل"]||""));
-                let aStrict = twoWordMatchesFirstOrLastStrict(bParts, ap);
-                let bStrict = twoWordMatchesFirstOrLastStrict(bParts, bp);
-                if (aStrict !== bStrict) return bStrict ? 1 : -1;
-                let aSame = nameSameWordsOrReversed(bParts, ap, 2);
-                let bSame = nameSameWordsOrReversed(bParts, bp, 2);
-                if (aSame !== bSame) return bSame ? 1 : -1;
-                let aSub = nameSubsetMatch(bParts, ap, 2) || nameSubsetMatch(ap, bParts, 2);
-                let bSub = nameSubsetMatch(bParts, bp, 2) || nameSubsetMatch(bp, bParts, 2);
-                if (aSub !== bSub) return bSub ? 1 : -1;
-                return nameMatchScore(bParts, bp, false) - nameMatchScore(bParts, ap, false);
-            })[0] : null;
-            // إذا مرشح واحد فقط بتطابق صارم أول/آخر وسعر قريب (25% أو 200) → نعتبره "حضر — مراجعة" بدل "لم يحضر" لسد ثغرة "حضر فعلاً والتاريخ مختلف"
-            let autoGuess = false;
-            if (bParts.length >= 2 && suggested && twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(suggested.n["إسم العميل"]||"")))) {
-                let nPrice = cleanPrice(suggested.n["الايجار الكلي"]||suggested.n["الاجمالي"]);
-                let priceOk = Math.abs(nPrice - expPrice) <= Math.min(250, Math.max(80, Math.round(expPrice * 0.28)));
-                let strictCount = candidates.filter(x => twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(x.n["إسم العميل"]||"")))).length;
-                if (priceOk && strictCount === 1) { autoGuess = true; processedBooking.add(idx); takenNazeel.add(suggested.i); storeResult(b, suggested.n, "guess", s, tax); }
-            }
-            // لأسماء من كلمتين: لا نعرض "ربما مطابق" إلا إذا المرشح يمر بتطابق صارم أول/آخر — تفادي مشبب البراء → TAIEB Azlouk
-            if (bParts.length === 2 && suggested && !twoWordMatchesFirstOrLastStrict(bParts, getParts(normalize(suggested.n["إسم العميل"]||"")))) suggested = null;
-            if (!autoGuess) {
-                let suggestedMatch = suggested ? { nName: suggested.n["إسم العميل"], nPrice: cleanPrice(suggested.n["الايجار الكلي"]||suggested.n["الاجمالي"]), nDate: parseDate(suggested.n["تاريخ الدخول"]) } : null;
-                storeResult(b, null, "miss", s, tax, false, undefined, suggestedMatch);
-            }
-        }
-    });
-
-    setLoaderProgress(98, 'إنهاء التحليل...');
-    await yieldToUI();
-    await applyManuals(s); // V18.0: This now reads from IndexedDB
-    updateStats(s, sub);
-    if (typeof window.renderTable === 'function') {
-        window.renderTable(); 
-    }
-    if (typeof window.location !== 'undefined' && window.location.search && window.location.search.indexOf('diagnose=1') !== -1) {
-        runDiagnosticReport();
-    }
-}
-
-/** تقرير تشخيص من البيانات الفعلية: كل "لم يحضر" مع كل مرشحي نزيل (نفس الكلمات / عكس اسم / فرعي / تطابق كلمات) + حصر حالات مرنة (عكس الاسم) */
-function runDiagnosticReport() {
-    var el = document.getElementById('diagnosticReport');
-    if (!el) return;
-    var rows = (typeof window !== 'undefined' && window.allRowsData) ? window.allRowsData : (typeof allRowsData !== 'undefined' ? allRowsData : []);
-    if (!Array.isArray(rows)) rows = [];
-    var nazeel = (typeof window !== 'undefined' && window.cachedN) ? window.cachedN : [];
-    if (!Array.isArray(nazeel)) nazeel = [];
-    var misses = rows.filter(function(r) { return r.type === 'miss'; });
-    var reversedRows = rows.filter(function(r) { return r.type === 'reversed'; });
-    var bName = '', bParts = [], nParts = [], reason = '', nPrice = 0, nDate = null, priceDiff = 0, dateDiff = null;
-    var safe = typeof sanitizeText === 'function' ? sanitizeText : function(t){ return (t==null||t===undefined)?'':String(t).replace(/[<>"&]/g,''); };
-    var html = '<h3 style="margin:0 0 12px; color:var(--bn-primary);">تقرير تشخيص — من الملفات الفعلية</h3>';
-    if (reversedRows.length > 0) {
-        html += '<div style="margin-bottom:16px; padding:10px; background:var(--bn-primary-soft); border-radius:8px;"><strong>حالات مرنة (عكس الاسم — أول↔ثاني):</strong> ' + reversedRows.length + ' — بوكينج↔نزيل (مثل مشبب البراء↔البراء مشبب، Zaher ALASIRI↔ALASIRI Zaher)</div><ul style="margin:0 0 12px 20px; padding:0;">';
-        for (var r = 0; r < reversedRows.length; r++) {
-            var rr = reversedRows[r];
-            var bn = rr.bName || (rr.b && (rr.b["اسم الضيف\\الضيوف"] || rr.b["اسم الضيف"] || ""));
-            var nn = rr.n && (rr.n["إسم العميل"] || "");
-            html += '<li style="margin:4px 0;">' + safe(bn || '-') + ' ↔ ' + safe(nn || '-') + '</li>';
-        }
-        html += '</ul>';
-    }
-    html += '<p style="margin:0 0 15px;">عدد لم يحضر: <strong>' + misses.length + '</strong> — لكل واحد: مرشحو نزيل (نفس الكلمات / عكس اسم / فرعي / تطابق كلمات) مع فرق السعر وفرق الأيام.</p>';
-    for (var m = 0; m < misses.length; m++) {
-        var row = misses[m];
-        bName = row.bName || (row.b && (row.b["اسم الضيف\\الضيوف"] || row.b["اسم الضيف"] || ""));
-        bParts = getParts(normalize(bName));
-        var bPrice = row.bPrice != null ? row.bPrice : (row.b && cleanPrice(row.b["السعر"]));
-        var bDate = row.timestamp || (row.b && parseDate(row.b["تسجيل الوصول"]));
-        html += '<div class="diag-miss" style="margin-bottom:14px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"><strong>لم يحضر:</strong> ' + safe(bName || '-') + ' — بوكينج: ' + (bPrice != null ? Number(bPrice).toFixed(0) : '-') + ' ر.س، تاريخ: ' + (bDate ? bDate.toLocaleDateString('ar-EG') : '-') + '</div>';
-        var candidates = [];
-        for (var i = 0; i < nazeel.length; i++) {
-            var n = nazeel[i];
-            nParts = getParts(String(n["إسم العميل"] || ""));
-            if (twoWordMatchesFirstOrLastStrict(bParts, nParts) || nameMatchScore(bParts, nParts, false) >= 1 || nameSubsetMatch(bParts, nParts, 2) || nameSameWordsOrReversed(bParts, nParts, 2)) {
-                nPrice = cleanPrice(n["الايجار الكلي"] || n["الاجمالي"]);
-                nDate = parseDate(n["تاريخ الدخول"]);
-                priceDiff = nPrice - (bPrice || 0);
-                dateDiff = (bDate && nDate) ? Math.round((nDate - bDate) / 864e5) : null;
-                reason = twoWordMatchesFirstOrLastStrict(bParts, nParts) ? 'تطابق صارم أول/آخر' : (nameFirstLastReversed(bParts, nParts, 2) ? 'عكس اسم' : (nameSameWords(bParts, nParts, 2) ? 'نفس الكلمات' : (nameSubsetMatch(bParts, nParts, 2) ? 'اسم فرعي' : 'تطابق ' + nameMatchScore(bParts, nParts, false) + ' كلمات')));
-                candidates.push({ nName: n["إسم العميل"], nPrice: nPrice, nDate: nDate, priceDiff: priceDiff, dateDiff: dateDiff, reason: reason });
-            }
-        }
-        html += '<ul style="margin:0 0 0 20px; padding:0;">';
-        for (var c = 0; c < candidates.length; c++) {
-            var x = candidates[c];
-            html += '<li style="margin:4px 0;">' + safe(x.nName || '-') + ' — سعر ' + Number(x.nPrice).toFixed(0) + '، فرق السعر ' + (x.priceDiff >= 0 ? '+' : '') + x.priceDiff.toFixed(0) + (x.dateDiff != null ? '، فرق الأيام ' + (x.dateDiff >= 0 ? '+' : '') + x.dateDiff : '') + ' — <span style="color:#FFD700;">' + safe(x.reason) + '</span></li>';
-        }
-        html += '</ul>';
-    }
-    el.innerHTML = html;
-    el.style.display = misses.length ? 'block' : 'none';
-}
-
-function storeResult(b, n, type, s, tax, isGroupHead, totalNazeelPrice, suggestedMatch, amountVerified) {
-    let bName = b["اسم الضيف\\الضيوف"] || b["اسم الضيف"] || b["تم الحجز من قِبل"];
-    let status = String(b["الحالة"]||"").toLowerCase();
-    let isOk = status.includes("ok");
-    let bPriceNet = cleanPrice(b["السعر"]);
-    let bPrice = bPriceNet * tax;
-    let nPrice = totalNazeelPrice || (n ? cleanPrice(n["الايجار الكلي"]||n["الاجمالي"]) : 0);
-    
-    if(type !== "miss") {
-        if(!isOk) { s.recover++; type="conflict"; }
-        else {
-            if(type==="ref"||type==="name"||type==="reversed"||type==="alias"||type==="multi") s.match++;
-            if(type==="money"||type==="guess"||type==="extension") s.money++; // V18.0: extension is money/fingerprint match
-            if(type==="group") s.group++;
-        }
-        s.revB += bPrice;
-        if(type !== "group" || isGroupHead) s.revN += nPrice; 
-    } else { if(isOk) s.miss++; }
-
-    let row = {
-        b: b, n: n, type: type, bName: bName, status: status, isOk: isOk,
-        bPrice: bPrice, nPrice: nPrice, bPriceNet: bPriceNet, tax: tax,
-        timestamp: parseDate(b["تسجيل الوصول"]) || 0
-    };
-    if (type === "group") row.isGroupHead = !!isGroupHead;
-    if (type === "miss" && suggestedMatch) row.suggestedMatch = suggestedMatch;
-    if (amountVerified === true) row.amountVerified = true;
-    allRowsData.push(row);
-}
-
-function updateStats(s, sub) {
-    // V18.0: Combine group/alias and money/extension
-    let combinedMatch = s.match + s.group;
-    let combinedMoney = s.money;
-
-    safeSet('kpiBook', s.book); safeSet('kpiOk', combinedMatch);
-    safeSet('kpiGroup', s.group); safeSet('kpiMoney', combinedMoney);
-    safeSet('kpiRecover', s.recover);
-    safeSet('kpiMiss', s.miss); // مؤكد في بوكينج ولم يظهر في نزيل = لا عمولة
-    safeSet('kpiRevB', s.revB.toLocaleString()); safeSet('kpiRevN', s.revN.toLocaleString());
-    safeSet('kpiDiff', (s.revN - s.revB).toLocaleString());
-    safeSet('subOk', sub.ok); safeSet('subCan', sub.can); safeSet('subNos', sub.nos);
-    if (typeof window !== 'undefined') window.lastStats = { s: s, sub: sub };
-}
-
-// متغير لتخزين فلتر الحالة
-let statusFilter = null;
-
-function setFilter(type, btn) {
-    // إزالة التفعيل من جميع الفلاتر
-    document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = type;
-    statusFilter = null; // إعادة تعيين فلتر الحالة عند استخدام الفلاتر العادية
-    if (typeof window.renderTable === 'function') {
-        window.renderTable();
-    }
-}
-
-function setStatusFilter(status, btn) {
-    // إزالة التفعيل من جميع الفلاتر
-    document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    statusFilter = status; // حفظ فلتر الحالة
-    currentFilter = 'all'; // إعادة تعيين الفلتر العادي
-    if (typeof window.renderTable === 'function') {
-        window.renderTable();
-    }
-}
-
-function filterTable() { 
-    if (typeof window.renderTable === 'function') {
-        window.renderTable(); 
-    }
-}
-
-function sortTable(n) {
-    let table = document.getElementById("mainTable");
-    let dir = table.getAttribute("data-sort-dir") === "asc" ? "desc" : "asc";
-    table.setAttribute("data-sort-dir", dir);
-    table.setAttribute("data-sort-col", n);
-
-    allRowsData.sort((a, b) => {
-        let valA, valB;
-        switch(n) {
-            case 0: return (dir === 'asc') ? 1 : -1; 
-            case 1: valA = a.bName; valB = b.bName; break;
-            case 2: valA = a.status; valB = b.status; break;
-            case 3: valA = a.n ? a.n["إسم العميل"] : ""; valB = b.n ? b.n["إسم العميل"] : ""; break;
-            case 4: valA = a.type; valB = b.type; break;
-            case 5: valA = a.bPrice; valB = b.bPrice; break;
-            case 6: valA = a.nPrice; valB = b.nPrice; break;
-            case 7: valA = (a.nPrice - a.bPrice); valB = (b.nPrice - b.bPrice); break;
-            case 8: valA = a.timestamp; valB = b.timestamp; break;
-        }
-        if (typeof valA === 'string') { return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA); }
-        else { return dir === 'asc' ? valA - valB : valB - valA; }
-    });
-    renderTable();
-}
-
-// V18.0: Save alias to IndexedDB instead of sessionStorage
-function markMerged(btn, bName) {
-    let tr = btn.closest('tr');
-    let nNameEl = tr.querySelector('td:nth-child(4)');
-    let nName = prompt(\`أدخل اسم العميل في نزيل (مطابق لـ \${bName}):\`, nNameEl.innerText.trim());
-    
-    if (nName && nName.trim() !== '-' && nName.trim() !== '') {
-        saveAlias(bName, nName);
-
-        let rowData = allRowsData.find(r => r.bName === bName && r.type === 'miss');
-        if(rowData) {
-            rowData.type = 'alias';
-            
-            // Heuristic Nazeel matching for display purposes only
-            let matchN = cachedN.find(n => normalize(n["إسم العميل"]) === normalize(nName));
-            if(matchN) {
-                rowData.n = matchN;
-                rowData.nPrice = cleanPrice(matchN["الايجار الكلي"]||matchN["الاجمالي"]);
-                let el = document.getElementById('kpiRevB');
-                let elN = document.getElementById('kpiRevN');
-                el.innerText = (parseFloat(el.innerText.replace(/,/g,'')) + rowData.bPrice).toLocaleString();
-                elN.innerText = (parseFloat(elN.innerText.replace(/,/g,'')) + rowData.nPrice).toLocaleString();
-            }
-
-            // Update stats and re-render
-            const kpiOk = document.getElementById('kpiOk'); kpiOk.textContent = parseInt(kpiOk.textContent) + 1;
-            renderTable(); 
-        }
-    }
-}
-
-// V18.0: This is no longer needed since Alias mapping runs in process(). It is replaced by the async loop in process.
-async function applyManuals(s) {
-    // This function is now mostly redundant as the 'alias' check is done inside the main process loop using getAlias.
-    // However, it can be used to re-calculate stats for *missed* bookings that were manually merged
-    // in this session before the alias check ran, or for consistency.
-    // For now, let's keep it simple: the process handles the memory.
-}
+// [PURGE: LEGACY V19.1 3.7]
 
 </script>
 
@@ -2320,7 +975,8 @@ async function applyManuals(s) {
                 return ((end - x.startedAt) / 1000).toFixed(2);
             }
             el.innerHTML = '⏱️ زمن التحليل: قراءة <b>' + fmt('read') + 's</b> | تجميع <b>' + fmt('prepare') + 's</b> | مطابقة <b>' + fmt('match') + 's</b> | AI <b>' + fmt('ai') + 's</b> | إجمالي <b>' + fmt('total') + 's</b>';
-            el.style.display = 'block';
+            // Hidden per user request: el.style.display = 'block';
+            el.style.display = 'none';
         };
 
         // UI Event Listeners — تشغيل فوراً (بدون تأخير 100ms) حتى يكون startEngine جاهزاً عند رفع الملفين
@@ -2343,20 +999,24 @@ async function applyManuals(s) {
                 nazeelFile.addEventListener('change', function () {
                     const dz = document.getElementById('dz-naz');
                     const progress = document.getElementById('progress-naz');
+                    const h3 = dz ? dz.querySelector('h3') : null;
                     if (dz) dz.classList.add('file-loaded');
+                    if (h3 && this.files[0]) {
+                        h3.innerHTML = `نزيل (Guests) <span class="file-name">✅ ${this.files[0].name}</span>`;
+                    }
                     // شريط تحميل سريع (حوالي 0.2 ثانية)
                     if (progress) {
                         progress.style.width = '0%';
                         let width = 0;
                         const interval = setInterval(() => {
-                            width += 5;
+                            width += 10;
                             if (width > 100) width = 100;
                             progress.style.width = width + '%';
                             if (width >= 100) {
                                 clearInterval(interval);
-                                setTimeout(() => { progress.style.width = '0%'; }, 150);
+                                setTimeout(() => { progress.style.opacity = '0'; }, 500);
                             }
-                        }, 10);
+                        }, 20);
                     }
                     tryAutoStart();
                 });
@@ -2365,20 +1025,24 @@ async function applyManuals(s) {
                 bookingFile.addEventListener('change', function () {
                     const dz = document.getElementById('dz-book');
                     const progress = document.getElementById('progress-book');
+                    const h3 = dz ? dz.querySelector('h3') : null;
                     if (dz) dz.classList.add('file-loaded');
+                    if (h3 && this.files[0]) {
+                        h3.innerHTML = `بوكينج (Booking) <span class="file-name">✅ ${this.files[0].name}</span>`;
+                    }
                     // شريط تحميل سريع (حوالي 0.2 ثانية)
                     if (progress) {
                         progress.style.width = '0%';
                         let width = 0;
                         const interval = setInterval(() => {
-                            width += 5;
+                            width += 10;
                             if (width > 100) width = 100;
                             progress.style.width = width + '%';
                             if (width >= 100) {
                                 clearInterval(interval);
-                                setTimeout(() => { progress.style.width = '0%'; }, 150);
+                                setTimeout(() => { progress.style.opacity = '0'; }, 500);
                             }
-                        }, 10);
+                        }, 20);
                     }
                     tryAutoStart();
                 });
@@ -2402,7 +1066,7 @@ async function applyManuals(s) {
                 if (!el) return;
                 var st = window.lastStats;
                 if (!st || !st.s) {
-                    el.innerHTML = '<div class="ps-title">تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج</div><p class="ps-date">لم يتم تشغيل التحليل بعد.</p>';
+                    el.innerHTML = '<div class="ps-title-main">تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج</div><p class="ps-date">لم يتم تشغيل التحليل بعد.</p>';
                     return;
                 }
                 var s = st.s, sub = st.sub;
@@ -2410,28 +1074,53 @@ async function applyManuals(s) {
                 var revN = (typeof s.revN === 'number') ? s.revN.toLocaleString() : String(s.revN || 0);
                 var diff = (typeof s.revN === 'number' && typeof s.revB === 'number') ? (s.revN - s.revB).toLocaleString() : String((s.revN || 0) - (s.revB || 0));
                 var dateStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                el.innerHTML =
-                    '<div class="ps-title">تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج</div>' +
-                    '<div class="ps-date">تاريخ التقرير: ' + dateStr + '</div>' +
-                    '<div class="ps-section">أ) ملخص الحجوزات</div>' +
-                    '<table class="ps-table"><tr><th>البند</th><th>العدد</th></tr>' +
-                    '<tr><td>إجمالي الحجوزات (فريد)</td><td>' + (s.book || 0) + '</td></tr>' +
-                    '<tr><td>مؤكد</td><td>' + (sub.ok || 0) + '</td></tr>' +
-                    '<tr><td>ملغي</td><td>' + (sub.can || 0) + '</td></tr>' +
-                    '<tr><td>NoShow (في الملف)</td><td>' + (sub.nos || 0) + '</td></tr>' +
-                    '<tr><td>مطابق (مرجع / اسم / ذاكرة)</td><td>' + (s.match || 0) + '</td></tr>' +
-                    '<tr><td>تجميع / غرفتان</td><td>' + (s.group || 0) + '</td></tr>' +
-                    '<tr><td>بصمة / تمديد</td><td>' + (s.money || 0) + '</td></tr>' +
-                    '<tr><td>تسكين (إلغاء)</td><td>' + (s.recover || 0) + '</td></tr>' +
-                    '<tr><td>لم يحضر (لا عمولة)</td><td>' + (s.miss || 0) + '</td></tr>' +
-                    '</table>' +
-                    '<div class="ps-section">ب) الملخص المالي</div>' +
-                    '<table class="ps-table"><tr><th>البند</th><th>المبلغ</th></tr>' +
-                    '<tr><td>إيراد بوكينج (المطابق)</td><td>' + revB + '</td></tr>' +
-                    '<tr><td>إيراد نزيل (المطابق)</td><td>' + revN + '</td></tr>' +
-                    '<tr><td>الفرق (نزيل − بوكينج)</td><td>' + diff + '</td></tr>' +
-                    '</table>' +
-                    '<p style="font-size:8pt; margin-top:8px;">الهدف: التحقق من الحضور قبل دفع عمولة بوكينج. لم يحضر = لا عمولة.</p>';
+
+                el.innerHTML = `
+                    <div class="ps-header">
+                        <div class="ps-logo-wrap">
+                            <div class="ps-logo-text">ADORA</div>
+                            <div class="ps-logo-sub">QUANTUM AUDIT LAYER</div>
+                        </div>
+                        <div class="ps-date">تاريخ التقرير: ${dateStr}</div>
+                    </div>
+                    
+                    <div class="ps-title-main">تقرير مطابقة الحجوزات — مراجعة عمولة بوكينج</div>
+                    
+                    <div class="ps-grid">
+                        <div class="ps-col">
+                            <div class="ps-section-title">أ) ملخص الحالة (تحليل الكم)</div>
+                            <table class="ps-table">
+                                <tr><th>إجمالي الحجوزات (فريد)</th><td>${s.book || 0}</td></tr>
+                                <tr><th>مؤكد (بوكينج)</th><td>${sub.ok || 0}</td></tr>
+                                <tr><th>مطابق (وجود في نزيل)</th><td>${s.match || 0}</td></tr>
+                                <tr><th>تجميع / غرف محولة</th><td>${s.group || 0}</td></tr>
+                                <tr><th>بصمة السعر / تمديد</th><td>${s.money || 0}</td></tr>
+                                <tr><th>تسكين (رغم الإلغاء)</th><td>${s.recover || 0}</td></tr>
+                                <tr style="background:#fff1f2"><th>لم يحضر (لا تدفع عمولة)</th><td>${s.miss || 0}</td></tr>
+                            </table>
+                        </div>
+                        <div class="ps-col">
+                            <div class="ps-section-title">ب) الملخص المالي (مراجعة الإيراد)</div>
+                            <table class="ps-table">
+                                <tr><th>إيراد بوكينج (للمطابق)</th><td>${revB} ر.س</td></tr>
+                                <tr><th>إيراد نزيل (للمطابق)</th><td>${revN} ر.س</td></tr>
+                                <tr style="border-top:2px solid #0f172a">
+                                    <th>فرق الإيراد (الصافي)</th>
+                                    <td class="${(s.revN - s.revB) >= 0 ? 'diff-pos' : 'diff-neg'}">${diff} ر.س</td>
+                                </tr>
+                            </table>
+                            <div style="font-size:7.5pt; color:#64748b; margin-top:10px; line-height:1.4">
+                                * ملاحظة: الفرق الموجب يعني زيادة إيراد في نزيل عن بوكينج. 
+                                <br> * لم يحضر = حجز مؤكد في بوكينج لم يتم العثور عليه في نزيل.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ps-footer">
+                        <div class="ps-sig-box">توقيع مراجع الحسابات</div>
+                        <div class="ps-sig-box">اعتماد الإدارة المالي</div>
+                    </div>
+                `;
             };
             if (!window._printSummaryBound) {
                 window.addEventListener('beforeprint', function () { if (window.buildPrintSummary) window.buildPrintSummary(); });
